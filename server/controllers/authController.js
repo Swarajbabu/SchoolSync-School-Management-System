@@ -7,33 +7,41 @@ const generateToken = (id) => {
   });
 };
 
-// @desc Register a new user (used by Sign Up + Admin "Add Student"/"Add Staff")
+// @desc Register a new user (Public registration is strictly student; admin can specify role)
 // @route POST /api/auth/register
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, rollNo, class: cls, section } = req.body;
+    const { name, email, password, rollNo, class: cls, section } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "Name, email and password are required" });
     }
 
-    const existing = await User.findOne({ email });
+    const existing = await User.findOne({ email: email.toLowerCase().trim() });
     if (existing) {
       return res.status(400).json({ message: "Email already registered" });
     }
 
+    // Public signup is strictly forced to role: "student".
+    // Staff/Admin accounts can only be created via the admin-protected /api/staff endpoint.
+    let assignedRole = "student";
+    if (req.user && req.user.role === "admin" && req.body.role) {
+      assignedRole = req.body.role;
+    }
+
     const user = await User.create({
-      name,
-      email,
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
       password,
-      role: role || "student",
-      rollNo,
-      class: cls,
-      section,
+      role: assignedRole,
+      rollNo: rollNo ? rollNo.toString().trim() : "",
+      class: cls || "10",
+      section: section || "A",
+      status: "Active",
       accessProtocol:
-        (role || "student") === "admin"
+        assignedRole === "admin"
           ? "ADMIN_SECURE_V1"
-          : (role || "student") === "teacher"
+          : assignedRole === "teacher"
           ? "TEACHER_SECURE_V1"
           : "STUDENT_SECURE_V1",
     });
@@ -55,18 +63,31 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { identifier, password, loginType } = req.body;
-    // identifier => roll number OR email
 
     if (!identifier || !password) {
       return res.status(400).json({ message: "Identifier and password are required" });
     }
 
-    const user = await User.findOne({
-      $or: [{ email: identifier.toLowerCase() }, { rollNo: identifier }],
-    });
+    const cleanIdentifier = identifier.toString().trim();
+    const isEmail = cleanIdentifier.includes("@");
+
+    let query;
+    if (isEmail) {
+      query = { email: cleanIdentifier.toLowerCase() };
+    } else {
+      // If logging in by roll number, must be in student role
+      query = { rollNo: cleanIdentifier, role: "student" };
+    }
+
+    const user = await User.findOne(query);
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check account status
+    if (user.status && user.status.toLowerCase() === "inactive") {
+      return res.status(403).json({ message: "Account is inactive. Please contact administration." });
     }
 
     if (loginType === "student" && user.role !== "student") {
@@ -103,16 +124,29 @@ const getMe = async (req, res) => {
   res.json(req.user);
 };
 
-// @desc Update own profile (any logged-in role)
+// @desc Update own profile (strictly whitelisted fields only)
 // @route PUT /api/auth/profile
 const updateProfile = async (req, res) => {
   try {
-    const updates = { ...req.body };
-    delete updates.password;
-    delete updates.role;
-    delete updates.email;
+    // Whitelist only safe demographic & profile presentation fields.
+    // Class, section, rollNo, salary, role, email, status, and password CANNOT be edited here.
+    const allowed = [
+      "contactNumber",
+      "currentAddress",
+      "profileImage",
+      "bloodGroup",
+      "dob",
+      "religion",
+    ];
 
-    const user = await User.findByIdAndUpdate(req.user._id, updates, {
+    const safeUpdates = {};
+    for (const key of allowed) {
+      if (req.body[key] !== undefined) {
+        safeUpdates[key] = req.body[key];
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(req.user._id, safeUpdates, {
       new: true,
       runValidators: true,
     }).select("-password");
@@ -124,4 +158,3 @@ const updateProfile = async (req, res) => {
 };
 
 module.exports = { register, login, getMe, updateProfile };
-

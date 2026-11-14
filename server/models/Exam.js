@@ -6,7 +6,7 @@ const examSchema = new mongoose.Schema(
     targetClass: { type: String, required: true },
     examDate: { type: String, required: true },
     description: { type: String, default: "" },
-    academicSession: { type: String, default: "2024-2025" },
+    academicSession: { type: String, default: "2025-2026" },
   },
   { timestamps: true }
 );

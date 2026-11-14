@@ -82,7 +82,11 @@ const FinanceControl = () => {
       await api.put(`/fees/${editPayment._id}`, {
         totalAmount: editPayment.totalAmount,
         paidAmount: numericPaid,
-        settlementStatus: numericPaid >= editPayment.totalAmount ? "PAID" : numericPaid > 0 ? "PARTIAL" : "UNPAID",
+        settlementStatus: numericPaid >= editPayment.totalAmount && editPayment.totalAmount > 0
+          ? "PAID"
+          : numericPaid > 0
+          ? "PARTIAL"
+          : "PENDING",
       });
       setToast({ type: "success", message: `Updated payment for ${editPayment.name}` });
       setEditPayment(null);

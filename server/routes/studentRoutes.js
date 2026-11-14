@@ -5,6 +5,7 @@ const {
   getStudentById,
   addStudent,
   updateStudent,
+  updateGuardian,
   deleteStudent,
   getClassesAndSections,
 } = require("../controllers/studentController");
@@ -16,6 +17,7 @@ router.get("/classes-sections", getClassesAndSections);
 router.get("/", authorize("admin", "teacher"), getStudents);
 router.get("/:id", getStudentById);
 router.post("/", authorize("admin"), addStudent);
+router.put("/:id/guardian", authorize("admin", "teacher"), updateGuardian);
 router.put("/:id", authorize("admin", "teacher"), updateStudent);
 router.delete("/:id", authorize("admin"), deleteStudent);
 

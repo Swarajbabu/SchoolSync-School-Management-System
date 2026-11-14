@@ -30,14 +30,52 @@ const MONTH_ABBR = [
 ];
 
 const parseExamDate = (str) => {
-  const parts = (str || "").split("/").map(Number);
-  if (parts.length !== 3 || parts.some(isNaN)) return { day: "--", month: "--", time: 0, raw: str };
-  const [d, m, y] = parts;
-  const time = new Date(y, m - 1, d).getTime();
-  const daysDiff = Math.ceil((time - Date.now()) / (1000 * 60 * 60 * 24));
+  if (!str) return { day: "--", month: "--", time: 0, raw: "" };
+  let day = "--";
+  let month = "--";
+  let time = 0;
+  let targetDate = null;
+  const cleanStr = String(str).trim();
+
+  if (cleanStr.includes("-")) {
+    const parts = cleanStr.split("-").map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      if (parts[0] > 1000) {
+        targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        targetDate = new Date(parts[2], parts[1] - 1, parts[0]);
+      }
+    }
+  } else if (cleanStr.includes("/")) {
+    const parts = cleanStr.split("/").map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      if (parts[2] > 1000) {
+        if (parts[0] <= 12 && parts[1] > 12) {
+          targetDate = new Date(parts[2], parts[0] - 1, parts[1]);
+        } else {
+          targetDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+      } else if (parts[0] > 1000) {
+        targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
+  }
+
+  if (!targetDate || isNaN(targetDate.getTime())) {
+    const parsed = new Date(cleanStr);
+    if (!isNaN(parsed.getTime())) targetDate = parsed;
+  }
+
+  if (targetDate && !isNaN(targetDate.getTime())) {
+    day = String(targetDate.getDate()).padStart(2, "0");
+    month = MONTH_ABBR[targetDate.getMonth()] || "--";
+    time = targetDate.getTime();
+  }
+
+  const daysDiff = time > 0 ? Math.ceil((time - Date.now()) / (1000 * 60 * 60 * 24)) : 0;
   return {
-    day: String(d).padStart(2, "0"),
-    month: MONTH_ABBR[m - 1] || "--",
+    day,
+    month,
     time,
     daysDiff,
     raw: str,
@@ -1074,7 +1112,7 @@ const Dashboard = () => {
                 <FiAward className="card-icon" aria-hidden="true" />
                 <div>
                   <h3 className="card-heading">Upcoming Examinations</h3>
-                  <span className="card-subhead">Session 2026-2027 Assessment Cycle</span>
+                  <span className="card-subhead">Session 2025–2026 Assessment Cycle</span>
                 </div>
               </div>
               <Link to="/exam-schedule" className="card-action-link">

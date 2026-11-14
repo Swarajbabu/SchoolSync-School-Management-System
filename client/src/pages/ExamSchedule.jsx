@@ -7,12 +7,54 @@ import { useAuth } from "../context/AuthContext";
 import useClassesAndSections from "../context/useClassesAndSections";
 
 const parseExamCountdown = (str) => {
-  const parts = (str || "").split("/").map(Number);
-  if (parts.length !== 3 || parts.some(isNaN)) return "Scheduled";
-  const [d, m, y] = parts;
-  const time = new Date(y, m - 1, d).getTime();
-  const daysDiff = Math.ceil((time - Date.now()) / (1000 * 60 * 60 * 24));
-  return daysDiff > 0 ? `In ${daysDiff} days` : daysDiff === 0 ? "Today" : "Concluded";
+  if (!str) return "Scheduled";
+  let targetDate = null;
+  const cleanStr = String(str).trim();
+
+  if (cleanStr.includes("-")) {
+    const parts = cleanStr.split("-").map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      if (parts[0] > 1000) {
+        // YYYY-MM-DD
+        targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        // DD-MM-YYYY
+        targetDate = new Date(parts[2], parts[1] - 1, parts[0]);
+      }
+    }
+  } else if (cleanStr.includes("/")) {
+    const parts = cleanStr.split("/").map(Number);
+    if (parts.length === 3 && !parts.some(isNaN)) {
+      if (parts[2] > 1000) {
+        if (parts[0] <= 12 && parts[1] > 12) {
+          // MM/DD/YYYY
+          targetDate = new Date(parts[2], parts[0] - 1, parts[1]);
+        } else {
+          // DD/MM/YYYY
+          targetDate = new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+      } else if (parts[0] > 1000) {
+        targetDate = new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+    }
+  }
+
+  if (!targetDate || isNaN(targetDate.getTime())) {
+    const parsed = new Date(cleanStr);
+    if (!isNaN(parsed.getTime())) targetDate = parsed;
+  }
+
+  if (!targetDate || isNaN(targetDate.getTime())) return "Scheduled";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  targetDate.setHours(0, 0, 0, 0);
+  const diffTime = targetDate.getTime() - today.getTime();
+  const daysDiff = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+  if (daysDiff > 0) return `In ${daysDiff} day${daysDiff > 1 ? "s" : ""}`;
+  if (daysDiff === 0) return "Today";
+  return "Concluded";
 };
 
 const ExamSchedule = () => {
@@ -231,8 +273,8 @@ const ExamSchedule = () => {
                   <div className="field">
                     <label>Exam Date</label>
                     <input
+                      type="date"
                       name="examDate"
-                      placeholder="DD/MM/YYYY"
                       value={form.examDate}
                       onChange={handleChange}
                       required

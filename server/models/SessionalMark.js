@@ -10,7 +10,7 @@ const sessionalMarkSchema = new mongoose.Schema(
     marksObtained: { type: Number, default: 0 },
     maxMarks: { type: Number, default: 100 },
     remarks: { type: String, default: "" },
-    year: { type: String, default: new Date().getFullYear().toString() },
+    year: { type: String, default: () => new Date().getFullYear().toString() },
   },
   { timestamps: true }
 );

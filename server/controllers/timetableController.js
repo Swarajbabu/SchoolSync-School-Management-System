@@ -13,6 +13,8 @@ const PERIODS = [
   "LEC.09",
 ];
 
+const escapeRegex = (str) => (str || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 // @desc Load full weekly timetable grid for a class/section
 // @route GET /api/timetable?class=&section=
 const getTimetable = async (req, res) => {
@@ -56,14 +58,21 @@ const getMyTimetable = async (req, res) => {
   try {
     const role = req.user?.role;
     if (role === "teacher") {
-      const teacherName = req.user.name;
-      const teacherId = req.user.teacherId || "";
-      const entries = await Timetable.find({
-        $or: [
-          { facultyCode: teacherId },
-          { facultyName: { $regex: new RegExp(teacherName, "i") } },
-        ],
-      });
+      const teacherName = (req.user.name || "").trim();
+      const teacherId = (req.user.teacherId || "").trim();
+
+      const conditions = [];
+      if (teacherId) {
+        conditions.push({ facultyCode: teacherId });
+      }
+      if (teacherName) {
+        conditions.push({ facultyName: new RegExp(`^${escapeRegex(teacherName)}$`, "i") });
+      }
+
+      const entries = conditions.length > 0
+        ? await Timetable.find({ $or: conditions })
+        : [];
+
       return res.json({ role: "teacher", days: DAYS, periods: PERIODS, entries });
     } else if (role === "student") {
       const cls = req.user.class || "10";

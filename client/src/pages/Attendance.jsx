@@ -52,7 +52,7 @@ const Attendance = () => {
       loadRollList();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.class, filters.section, filters.date]);
+  }, [filters.class, filters.section, filters.date, filters.period]);
 
   const handleChange = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
 

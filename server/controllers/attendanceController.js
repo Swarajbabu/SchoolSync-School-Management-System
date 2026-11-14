@@ -148,10 +148,36 @@ const getStudentAttendanceReport = async (req, res) => {
         .json({ message: "Access denied. You can only view your own attendance record." });
     }
 
-    const records = await Attendance.find({ student: req.params.id }).sort({ date: -1 });
-    const totalPresent = records.filter((r) => r.status === "present").length;
-    const percentage = records.length ? ((totalPresent / records.length) * 100).toFixed(1) : "0.0";
-    res.json({ records, totalPresent, totalRecords: records.length, percentage });
+    const records = await Attendance.find({ student: req.params.id });
+
+    // Robust chronological descending sort (newest first) across cross-year MM/DD/YYYY strings
+    records.sort((a, b) => {
+      const [ma, da, ya] = (a.date || "").split("/").map(Number);
+      const [mb, db, yb] = (b.date || "").split("/").map(Number);
+      const timeA = new Date(ya || 2026, (ma || 1) - 1, da || 1).getTime();
+      const timeB = new Date(yb || 2026, (mb || 1) - 1, db || 1).getTime();
+      return timeB - timeA;
+    });
+
+    // Exclude holidays from conducted sessions, count present + late as attended
+    const instructionalRecords = records.filter((r) => r.status !== "holiday");
+    const totalConducted = instructionalRecords.length;
+    const totalPresent = instructionalRecords.filter((r) => r.status === "present").length;
+    const totalLate = instructionalRecords.filter((r) => r.status === "late").length;
+    const totalAttended = totalPresent + totalLate;
+    const totalAbsent = instructionalRecords.filter((r) => r.status === "absent").length;
+    const percentage =
+      totalConducted > 0 ? ((totalAttended / totalConducted) * 100).toFixed(1) : "0.0";
+
+    res.json({
+      records,
+      totalPresent,
+      totalLate,
+      totalAttended,
+      totalAbsent,
+      totalRecords: totalConducted,
+      percentage,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

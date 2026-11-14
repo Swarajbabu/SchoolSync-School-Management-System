@@ -6,16 +6,22 @@ const getNotices = async (req, res) => {
   try {
     const { category } = req.query;
     const filter = {};
-    if (category && category !== "All Notice Categories") filter.category = category;
+    if (category && category !== "All Notice Categories") {
+      filter.category = category;
+    }
 
     // Role-based audience filtering
     const role = req.user?.role;
     if (role === "student") {
       filter.audience = { $in: ["EVERYONE", "STUDENT"] };
     } else if (role === "teacher") {
-      filter.audience = { $in: ["EVERYONE", "TEACHER"] };
+      // Teachers can see institutional/faculty notices AND any notices they authored for students
+      filter.$or = [
+        { audience: { $in: ["EVERYONE", "TEACHER"] } },
+        { publishedBy: req.user._id },
+      ];
     }
-    // Admin sees all audiences
+    // Admin sees all notices
 
     const notices = await Notice.find(filter)
       .populate("publishedBy", "name role")
@@ -35,9 +41,9 @@ const createNotice = async (req, res) => {
       return res.status(400).json({ message: "Title and content are required" });
     }
     const notice = await Notice.create({
-      title,
-      content,
-      category,
+      title: title.trim(),
+      content: content.trim(),
+      category: category || "General",
       audience: audience || "EVERYONE",
       publishedBy: req.user._id,
     });
@@ -51,8 +57,15 @@ const createNotice = async (req, res) => {
 // @route DELETE /api/notices/:id
 const deleteNotice = async (req, res) => {
   try {
-    const notice = await Notice.findByIdAndDelete(req.params.id);
+    const notice = await Notice.findById(req.params.id);
     if (!notice) return res.status(404).json({ message: "Notice not found" });
+
+    // Authorization: Admin or author
+    if (req.user.role !== "admin" && notice.publishedBy?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Forbidden: You can only remove your own notices" });
+    }
+
+    await notice.deleteOne();
     res.json({ message: "Notice removed" });
   } catch (error) {
     res.status(500).json({ message: error.message });

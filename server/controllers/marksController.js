@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const SessionalMark = require("../models/SessionalMark");
 
-// @desc Load marks entry ledger for class/section/assessmentType/subject
+// @desc Load marks entry ledger for class/section/assessmentType/subject (READ-ONLY, no phantom writes)
 // @route GET /api/marks?class=&section=&assessmentType=&subject=
 const getMarksLedger = async (req, res) => {
   try {
@@ -10,30 +10,29 @@ const getMarksLedger = async (req, res) => {
       return res.status(400).json({ message: "class, section, assessmentType, subject required" });
     }
 
-    const students = await User.find({ role: "student", class: cls, section }).select(
-      "name rollNo"
-    );
+    const students = await User.find({ role: "student", class: cls, section })
+      .select("name rollNo")
+      .sort({ rollNo: 1, name: 1 });
 
     const yr = year || new Date().getFullYear().toString();
 
-    const ledger = await Promise.all(
-      students.map(async (s) => {
-        // Atomic upsert avoids a race condition where two parallel requests
-        // both try to create the same record and hit the unique index.
-        const record = await SessionalMark.findOneAndUpdate(
-          { student: s._id, assessmentType, subject, year: yr },
-          {
-            $setOnInsert: {
-              student: s._id,
-              class: cls,
-              section,
-              assessmentType,
-              subject,
-              year: yr,
-            },
-          },
-          { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
+    // Query existing marks without modifying the database on GET
+    const studentIds = students.map((s) => s._id);
+    const existingMarks = await SessionalMark.find({
+      student: { $in: studentIds },
+      class: cls,
+      section,
+      assessmentType,
+      subject: subject.trim(),
+      year: yr,
+    });
+
+    const marksMap = new Map();
+    existingMarks.forEach((m) => marksMap.set(m.student.toString(), m));
+
+    const ledger = students.map((s) => {
+      const record = marksMap.get(s._id.toString());
+      if (record) {
         return {
           _id: record._id,
           studentId: s._id,
@@ -41,11 +40,23 @@ const getMarksLedger = async (req, res) => {
           rollNo: s.rollNo,
           marksObtained: record.marksObtained,
           maxMarks: record.maxMarks,
-          remarks: record.remarks,
+          remarks: record.remarks || "",
           status: record.marksObtained >= record.maxMarks * 0.33 ? "PASS" : "FAIL",
+          isGraded: true,
         };
-      })
-    );
+      }
+      return {
+        _id: null,
+        studentId: s._id,
+        name: s.name,
+        rollNo: s.rollNo,
+        marksObtained: 0,
+        maxMarks: 100,
+        remarks: "",
+        status: "NOT_GRADED",
+        isGraded: false,
+      };
+    });
 
     res.json({ subject, totalStudents: students.length, ledger });
   } catch (error) {
@@ -53,27 +64,48 @@ const getMarksLedger = async (req, res) => {
   }
 };
 
-// @desc Finalize/save marks (bulk upsert)
+// @desc Finalize/save marks (Atomic bulk upsert with range validation)
 // @route POST /api/marks/save
 const saveMarks = async (req, res) => {
   try {
-    const { entries } = req.body; // [{ _id, marksObtained, maxMarks, remarks }]
-    if (!Array.isArray(entries)) {
-      return res.status(400).json({ message: "entries[] required" });
+    const { class: cls, section, assessmentType, subject, year, entries } = req.body;
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return res.status(400).json({ message: "entries array required" });
     }
 
-    const ops = entries.map((e) => ({
-      updateOne: {
-        filter: { _id: e._id },
-        update: {
-          $set: {
-            marksObtained: e.marksObtained,
-            maxMarks: e.maxMarks,
-            remarks: e.remarks,
+    const yr = year || new Date().getFullYear().toString();
+
+    const ops = entries.map((e) => {
+      const maxM = Math.max(1, Number(e.maxMarks) || 100);
+      const obtM = Math.max(0, Math.min(maxM, Number(e.marksObtained) || 0));
+
+      return {
+        updateOne: {
+          filter: {
+            student: e.studentId,
+            class: cls,
+            section,
+            assessmentType,
+            subject: subject.trim(),
+            year: yr,
           },
+          update: {
+            $set: {
+              student: e.studentId,
+              class: cls,
+              section,
+              assessmentType,
+              subject: subject.trim(),
+              year: yr,
+              marksObtained: obtM,
+              maxMarks: maxM,
+              remarks: (e.remarks || "").toString().trim(),
+            },
+          },
+          upsert: true,
         },
-      },
-    }));
+      };
+    });
 
     await SessionalMark.bulkWrite(ops);
     res.json({ message: "Marks finalized and saved successfully!" });
@@ -97,4 +129,3 @@ const getStudentMarksReport = async (req, res) => {
 };
 
 module.exports = { getMarksLedger, saveMarks, getStudentMarksReport };
-

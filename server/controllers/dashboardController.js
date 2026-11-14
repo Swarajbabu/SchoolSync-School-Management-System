@@ -81,16 +81,20 @@ const getStats = async (req, res) => {
     // 2. TEACHER TELEMETRY (ACADEMIC FACULTY)
     // ==========================================
     if (role === "teacher") {
-      const teacherName = req.user.name;
-      const teacherId = req.user.teacherId || "";
+      const teacherName = (req.user.name || "").trim();
+      const teacherId = (req.user.teacherId || "").trim();
+      const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+      const conditions = [];
+      if (teacherId) {
+        conditions.push({ facultyCode: teacherId });
+      }
+      if (teacherName) {
+        conditions.push({ facultyName: new RegExp(`^${escapeRegex(teacherName)}$`, "i") });
+      }
 
       // Find all timetable slots assigned to this teacher
-      const teacherSlots = await Timetable.find({
-        $or: [
-          { facultyCode: teacherId },
-          { facultyName: { $regex: new RegExp(teacherName, "i") } },
-        ],
-      });
+      const teacherSlots = conditions.length > 0 ? await Timetable.find({ $or: conditions }) : [];
 
       // Extract unique classes (e.g., ["10-A", "12-A"])
       const assignedClasses = [
@@ -126,7 +130,10 @@ const getStats = async (req, res) => {
       });
 
       const totalNotices = await Notice.countDocuments({
-        audience: { $in: ["EVERYONE", "TEACHER"] },
+        $or: [
+          { audience: { $in: ["EVERYONE", "TEACHER"] } },
+          { publishedBy: req.user._id },
+        ],
       });
 
       const totalExams = await Exam.countDocuments();
@@ -154,24 +161,31 @@ const getStats = async (req, res) => {
       const studentClass = req.user.class || "10";
       const studentSection = req.user.section || "A";
 
-      // Attendance telemetry
-      const attendanceRecords = await Attendance.find({ student: studentId });
-      const totalClassesConducted = attendanceRecords.length;
-      const totalClassesAttended = attendanceRecords.filter(
-        (r) => r.status === "present"
+      // Attendance telemetry (holidays excluded, present + late counted)
+      const allAttendance = await Attendance.find({ student: studentId });
+      const instructionalRecords = allAttendance.filter((r) => r.status !== "holiday");
+      const totalClassesConducted = instructionalRecords.length;
+      const totalClassesAttended = instructionalRecords.filter(
+        (r) => r.status === "present" || r.status === "late"
       ).length;
       const attendancePercent =
         totalClassesConducted > 0
           ? Math.round((totalClassesAttended / totalClassesConducted) * 100)
-          : 100;
+          : 0;
 
       // Fee telemetry
       const fees = await Fee.find({ student: studentId });
       const totalFeeAmount = fees.reduce((sum, f) => sum + f.totalAmount, 0);
       const totalFeePaid = fees.reduce((sum, f) => sum + f.paidAmount, 0);
-      const feeDues = totalFeeAmount - totalFeePaid;
-      const feeStatus =
-        feeDues === 0 ? "PAID" : totalFeePaid > 0 ? "PARTIAL" : "PENDING";
+      const feeDues = Math.max(0, totalFeeAmount - totalFeePaid);
+      let feeStatus = "PENDING";
+      if (fees.length === 0) {
+        feeStatus = "NO_INVOICES";
+      } else if (feeDues === 0 && totalFeeAmount > 0) {
+        feeStatus = "PAID";
+      } else if (totalFeePaid > 0) {
+        feeStatus = "PARTIAL";
+      }
 
       // Academic performance / Marks
       const marks = await SessionalMark.find({ student: studentId });
@@ -187,10 +201,33 @@ const getStats = async (req, res) => {
         day: effectiveDay,
       }).sort({ period: 1 });
 
-      // Upcoming exams for this student's class
-      const upcomingExamsCount = await Exam.countDocuments({
+      // Upcoming exams for this student's class (filtering out past/concluded exams)
+      const allClassExams = await Exam.find({
         targetClass: { $in: [studentClass, "All Classes"] },
       });
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const upcomingExams = allClassExams.filter((exam) => {
+        if (!exam.examDate) return true;
+        const clean = String(exam.examDate).trim();
+        let target = null;
+        if (clean.includes("-")) {
+          const parts = clean.split("-").map(Number);
+          if (parts[0] > 1000) target = new Date(parts[0], parts[1] - 1, parts[2]);
+          else target = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else if (clean.includes("/")) {
+          const parts = clean.split("/").map(Number);
+          if (parts[0] <= 12 && parts[1] > 12) target = new Date(parts[2], parts[0] - 1, parts[1]);
+          else target = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else {
+          target = new Date(clean);
+        }
+        if (!target || isNaN(target.getTime())) return true;
+        target.setHours(0, 0, 0, 0);
+        return target.getTime() >= todayStart.getTime();
+      });
+      const upcomingExamsCount = upcomingExams.length;
 
       // Notices for students
       const totalNotices = await Notice.countDocuments({

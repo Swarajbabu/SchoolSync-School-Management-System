@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FiDollarSign, FiCheckCircle, FiAlertCircle, FiClock, FiPrinter, FiDownload } from "react-icons/fi";
+import { FiDollarSign, FiCheckCircle, FiAlertCircle, FiClock, FiPrinter } from "react-icons/fi";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import Toast from "../components/Toast";
@@ -37,7 +37,7 @@ const MyFees = () => {
   const totalPaid = feeData?.totalPaid || 0;
   const totalDue = feeData?.totalDue || 0;
   const totalAmount = feeData?.totalAmount || 0;
-  const status = feeData?.status || "PENDING";
+  const status = records.length === 0 ? "NO INVOICES" : feeData?.status || "PENDING";
 
   return (
     <div className="fee-management-root">
@@ -74,7 +74,7 @@ const MyFees = () => {
               <FiDollarSign aria-hidden="true" />
             </div>
           </div>
-          <div className="metric-value">${totalAmount.toLocaleString()}</div>
+          <div className="metric-value">₹{totalAmount.toLocaleString()}</div>
           <div className="metric-footer">
             <span>Cumulative institutional fees for active term</span>
           </div>
@@ -87,7 +87,7 @@ const MyFees = () => {
               <FiCheckCircle aria-hidden="true" />
             </div>
           </div>
-          <div className="metric-value">${totalPaid.toLocaleString()}</div>
+          <div className="metric-value">₹{totalPaid.toLocaleString()}</div>
           <div className="metric-footer">
             <span className="status-dot green" aria-hidden="true" />
             <span>Verified accounts department deposits</span>
@@ -108,7 +108,7 @@ const MyFees = () => {
             </div>
           </div>
           <div className="metric-value" style={{ color: totalDue > 0 ? "var(--red)" : "var(--green)" }}>
-            ${totalDue.toLocaleString()}
+            ₹{totalDue.toLocaleString()}
           </div>
           <div className="metric-footer">
             <span className={`status-dot ${totalDue > 0 ? "red" : "green"}`} aria-hidden="true" />
@@ -131,9 +131,31 @@ const MyFees = () => {
                 borderRadius: "9999px",
                 fontSize: "13px",
                 fontWeight: 700,
-                background: status === "PAID" ? "#f0fdf4" : status === "PARTIAL" ? "#fffbeb" : "#fef2f2",
-                color: status === "PAID" ? "#166534" : status === "PARTIAL" ? "#b45309" : "#991b1b",
-                border: `1px solid ${status === "PAID" ? "#bbf7d0" : status === "PARTIAL" ? "#fde68a" : "#fecaca"}`,
+                background:
+                  status === "PAID"
+                    ? "#f0fdf4"
+                    : status === "PARTIAL"
+                    ? "#fffbeb"
+                    : status === "NO INVOICES"
+                    ? "#f1f5f9"
+                    : "#fef2f2",
+                color:
+                  status === "PAID"
+                    ? "#166534"
+                    : status === "PARTIAL"
+                    ? "#b45309"
+                    : status === "NO INVOICES"
+                    ? "#475569"
+                    : "#991b1b",
+                border: `1px solid ${
+                  status === "PAID"
+                    ? "#bbf7d0"
+                    : status === "PARTIAL"
+                    ? "#fde68a"
+                    : status === "NO INVOICES"
+                    ? "#cbd5e1"
+                    : "#fecaca"
+                }`,
               }}
             >
               {status}
@@ -160,7 +182,7 @@ const MyFees = () => {
         <div className="card-content" style={{ padding: 0 }}>
           {records.length === 0 ? (
             <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--text-muted)" }}>
-              No fee statements on file for your account.
+              No fee statements on file for your account yet.
             </div>
           ) : (
             <div className="table-wrap">
@@ -177,20 +199,20 @@ const MyFees = () => {
                 </thead>
                 <tbody>
                   {records.map((r) => {
-                    const balance = r.totalAmount - r.paidAmount;
-                    const isPaid = balance === 0;
+                    const balance = Math.max(0, r.totalAmount - r.paidAmount);
+                    const isPaid = balance === 0 && r.totalAmount > 0;
                     return (
                       <tr key={r._id}>
                         <td>
                           <strong>{r.month} {r.year}</strong>
                         </td>
                         <td>Class {r.class} - {r.section}</td>
-                        <td>${r.totalAmount.toLocaleString()}</td>
+                        <td>₹{r.totalAmount.toLocaleString()}</td>
                         <td style={{ color: "var(--green)", fontWeight: 600 }}>
-                          ${r.paidAmount.toLocaleString()}
+                          ₹{r.paidAmount.toLocaleString()}
                         </td>
                         <td style={{ color: balance > 0 ? "var(--red)" : "var(--text-secondary)", fontWeight: 600 }}>
-                          ${balance.toLocaleString()}
+                          ₹{balance.toLocaleString()}
                         </td>
                         <td>
                           <span

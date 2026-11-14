@@ -1,7 +1,7 @@
 {
-  "name": "eduplus-server",
+  "name": "schoolsync-server",
   "version": "1.0.0",
-  "description": "EduPlus School ERP - Backend (Node + Express + MongoDB)",
+  "description": "SchoolSync School ERP - Backend (Node + Express + MongoDB)",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

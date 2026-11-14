@@ -21,6 +21,17 @@ const eventRoutes = require("./routes/eventRoutes");
 
 const app = express();
 
+// Production Security Guard
+if (
+  process.env.NODE_ENV === "production" &&
+  (!process.env.JWT_SECRET ||
+    process.env.JWT_SECRET.includes("change_me") ||
+    process.env.JWT_SECRET === "eduplus_super_secret_key_change_me")
+) {
+  console.error("❌ FATAL: Cannot start server in production with default or insecure JWT_SECRET!");
+  process.exit(1);
+}
+
 // Connect to MongoDB
 connectDB();
 

@@ -15,9 +15,11 @@ const StudentReportView = ({ student, attendance, marks, loading }) => {
 
   // Attendance metrics
   const totalRecords = attendance?.totalRecords || 0;
-  const totalPresent = attendance?.totalPresent || 0;
-  const totalAbsent = totalRecords - totalPresent;
-  const attPercentage = attendance?.percentage || (totalRecords > 0 ? ((totalPresent / totalRecords) * 100).toFixed(1) : "0.0");
+  const totalAttended = attendance?.totalAttended ?? attendance?.totalPresent ?? 0;
+  const totalAbsent = attendance?.totalAbsent ?? Math.max(0, totalRecords - totalAttended);
+  const attPercentage =
+    attendance?.percentage ||
+    (totalRecords > 0 ? ((totalAttended / totalRecords) * 100).toFixed(1) : "0.0");
   const isCompliant = Number(attPercentage) >= 75;
 
   // Marks metrics
@@ -106,9 +108,9 @@ const StudentReportView = ({ student, attendance, marks, loading }) => {
             </div>
 
             <div className="stat-card">
-              <div className="stat-label">Days Present</div>
-              <div className="stat-value" style={{ color: "var(--green)" }}>{totalPresent}</div>
-              <div className="stat-meta">Verified in class</div>
+              <div className="stat-label">Days Attended</div>
+              <div className="stat-value" style={{ color: "var(--green)" }}>{totalAttended}</div>
+              <div className="stat-meta">Present / Late attendance</div>
             </div>
 
             <div className="stat-card">

@@ -17,6 +17,11 @@ const MONTHS = [
 ];
 
 const seed = async () => {
+  if (process.env.NODE_ENV === "production") {
+    console.error("❌ Refusing to seed database in production environment!");
+    process.exit(1);
+  }
+
   await connectDB();
 
   console.log("Cleaning up all existing collections...");
@@ -68,7 +73,7 @@ const seed = async () => {
   const teachers = await User.create([
     {
       name: "Charu Sarswat",
-      email: "charusaraswat639649@gmail.com",
+      email: "charu.s@schoolsync.edu",
       password: "teacher123",
       role: "teacher",
       teacherId: "TCH101",
@@ -169,21 +174,21 @@ const seed = async () => {
     // Class 10 - Section A
     {
       name: "Ankit",
-      email: "g@gmail.com",
+      email: "student@schoolsync.edu",
       password: "student123",
       role: "student",
       rollNo: "4",
       class: "10",
       section: "A",
       bloodGroup: "A+",
-      guardianContact: "9675700000",
+      guardianContact: "9876543210",
       fatherName: "Mr Neeraj",
       motherName: "Mrs Rekha",
       dob: "22/05/2009",
       religion: "HINDUISM",
       gender: "MALE",
-      currentAddress: "Nagla bans post kumarpur Hathras",
-      permanentAddress: "Nagla bans post kumarpur Hathras",
+      currentAddress: "Campus Quarters, Academic City, New Delhi",
+      permanentAddress: "Campus Quarters, Academic City, New Delhi",
       enrollmentNo: "4",
       academicSession: "2025-2026",
       status: "Active",
@@ -320,14 +325,14 @@ const seed = async () => {
     // Class 3 - Section C
     {
       name: "Ayush",
-      email: "a@gmail.com",
+      email: "ayush.student@schoolsync.edu",
       password: "student123",
       role: "student",
       rollNo: "5",
       class: "3",
       section: "C",
       bloodGroup: "O+",
-      guardianContact: "9875706630",
+      guardianContact: "9876543211",
       fatherName: "Manish Kumar",
       motherName: "Sita Devi",
       dob: "11/03/2016",
@@ -839,7 +844,7 @@ const seed = async () => {
       title: "Faculty Academic Review & Curriculum Moderation Meeting",
       content:
         "All departmental heads and faculty members are requested to attend the term review meeting in Conference Room 1 at 3:30 PM this Friday.",
-      category: "Administration",
+      category: "General",
       audience: "TEACHER",
       publishedBy: admin._id,
     },
@@ -947,8 +952,8 @@ const seed = async () => {
   console.log("---------------------------------------------------");
   console.log("🔑 Demo Logins:");
   console.log("Admin   -> admin@school.com / admin123");
-  console.log("Teacher -> charusaraswat639649@gmail.com / teacher123");
-  console.log("Student -> Roll: 4 (email: g@gmail.com) / student123");
+  console.log("Teacher -> charu.s@schoolsync.edu / teacher123");
+  console.log("Student -> Roll: 4 (email: student@schoolsync.edu) / student123");
   console.log("===================================================");
 
   process.exit(0);

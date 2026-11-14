@@ -527,13 +527,13 @@ Use these pre-seeded accounts to explore each persona:
 
 ### 👨‍🏫 Academic Faculty / Teacher
 - **Portal Tab**: Staff / Admin
-- **Email**: `charusaraswat639649@gmail.com`
+- **Email**: `charu.s@schoolsync.edu`
 - **Password**: `teacher123`
 - **Scope**: Class roll call, marks grading, study material uploads, student transcripts, and bulletins.
 
 ### 👨‍🎓 Enrolled Student
 - **Portal Tab**: Student
-- **Roll Number**: `4` *(or Email: `g@gmail.com`)*
+- **Roll Number**: `4` *(or Email: `student@schoolsync.edu`)*
 - **Password**: `student123`
 - **Scope**: Personal academic hub, sessional transcript scorecard, attendance history, homework, and fee receipts.
 

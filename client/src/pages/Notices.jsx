@@ -64,7 +64,9 @@ const NoticeBoard = () => {
             <select value={category} onChange={(e) => setCategory(e.target.value)}>
               <option>All Notice Categories</option>
               <option>General</option>
-              <option>Exam</option>
+              <option>Academic</option>
+              <option>Examination</option>
+              <option>Sports</option>
               <option>Event</option>
               <option>Urgent</option>
             </select>
@@ -152,7 +154,9 @@ const NoticeBoard = () => {
                     <label>Category</label>
                     <select name="category" value={form.category} onChange={handleChange}>
                       <option>General</option>
-                      <option>Exam</option>
+                      <option>Academic</option>
+                      <option>Examination</option>
+                      <option>Sports</option>
                       <option>Event</option>
                       <option>Urgent</option>
                     </select>
