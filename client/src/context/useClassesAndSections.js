@@ -22,6 +22,16 @@ export const useClassesAndSections = () => {
   useEffect(() => {
     let isMounted = true;
     const fetchClasses = async () => {
+      const token =
+        localStorage.getItem("schoolsync_token") || localStorage.getItem("eduplus_token");
+      if (!token) {
+        if (isMounted) {
+          setData(DEFAULT_CLASSES);
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         const res = await api.get("/students/classes-sections");
         if (isMounted) {

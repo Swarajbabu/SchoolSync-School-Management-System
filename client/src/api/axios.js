@@ -22,7 +22,10 @@ api.interceptors.response.use(
       localStorage.removeItem("schoolsync_user");
       localStorage.removeItem("eduplus_token");
       localStorage.removeItem("eduplus_user");
-      if (window.location.pathname !== "/login") {
+      if (
+        window.location.pathname !== "/login" &&
+        window.location.pathname !== "/signup"
+      ) {
         window.location.href = "/login";
       }
     }
