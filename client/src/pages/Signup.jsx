@@ -19,7 +19,7 @@ import { useAuth } from "../context/AuthContext";
 import useClassesAndSections from "../context/useClassesAndSections";
 
 const Signup = () => {
-  const { classes, sections } = useClassesAndSections();
+  const { classes, getSectionsForClass } = useClassesAndSections();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -34,6 +34,10 @@ const Signup = () => {
 
   const { register, error: contextError } = useAuth();
   const navigate = useNavigate();
+
+  const availableSections = getSectionsForClass
+    ? getSectionsForClass(form.class)
+    : ["A", "B", "C"];
 
   const activeError = localError || contextError;
 
@@ -266,7 +270,7 @@ const Signup = () => {
                       value={form.section}
                       onChange={handleChange}
                     >
-                      {sections.map((sec) => (
+                      {availableSections.map((sec) => (
                         <option key={sec} value={sec}>
                           Section {sec}
                         </option>
