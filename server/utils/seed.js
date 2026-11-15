@@ -1,4 +1,5 @@
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const connectDB = require("../config/db");
 const User = require("../models/User");
 const Notice = require("../models/Notice");
@@ -10,6 +11,11 @@ const Fee = require("../models/Fee");
 const Material = require("../models/Material");
 const SessionalMark = require("../models/SessionalMark");
 const Timetable = require("../models/Timetable");
+const GradingPolicy = require("../models/GradingPolicy");
+const Payment = require("../models/Payment");
+const AuditLog = require("../models/AuditLog");
+const ClassModel = require("../models/Class");
+const Subject = require("../models/Subject");
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -32,9 +38,52 @@ const seed = async () => {
   await Attendance.deleteMany({});
   await StaffAttendance.deleteMany({});
   await Fee.deleteMany({});
+  await Payment.deleteMany({});
   await Material.deleteMany({});
   await SessionalMark.deleteMany({});
   await Timetable.deleteMany({});
+  await GradingPolicy.deleteMany({});
+  await AuditLog.deleteMany({});
+  await ClassModel.deleteMany({});
+  await Subject.deleteMany({});
+
+  console.log("Creating Institutional Classes & Sections...");
+  await ClassModel.create([
+    { name: "Grade 1", sections: ["A", "B", "C"], academicWing: "Primary" },
+    { name: "Grade 2", sections: ["A", "B", "C"], academicWing: "Primary" },
+    { name: "Grade 3", sections: ["A", "B", "C"], academicWing: "Primary" },
+    { name: "Grade 4", sections: ["A", "B", "C"], academicWing: "Primary" },
+    { name: "Grade 5", sections: ["A", "B", "C"], academicWing: "Primary" },
+    { name: "Grade 6", sections: ["A", "B", "C"], academicWing: "Middle" },
+    { name: "Grade 7", sections: ["A", "B", "C"], academicWing: "Middle" },
+    { name: "Grade 8", sections: ["A", "B", "C"], academicWing: "Middle" },
+    { name: "Grade 9", sections: ["A", "B", "C"], academicWing: "Secondary" },
+    { name: "10", sections: ["A", "B", "C"], academicWing: "Secondary" },
+    { name: "Grade 11", sections: ["A", "B", "C"], academicWing: "Senior Secondary" },
+    { name: "Grade 12", sections: ["A", "B", "C"], academicWing: "Senior Secondary" },
+  ]);
+
+  console.log("Creating Institutional Curriculum Subjects...");
+  await Subject.create([
+    { name: "Mathematics", code: "MTH-101", department: "Mathematics", applicableClasses: ["10", "Grade 9", "Grade 11", "Grade 12"] },
+    { name: "Science", code: "SCI-101", department: "Science", applicableClasses: ["10", "Grade 9"] },
+    { name: "English Literature", code: "ENG-101", department: "Languages", applicableClasses: ["10", "Grade 9", "Grade 11", "Grade 12"] },
+    { name: "Social Studies", code: "SST-101", department: "Humanities", applicableClasses: ["10", "Grade 9"] },
+    { name: "Hindi", code: "HIN-101", department: "Languages", applicableClasses: ["10", "Grade 9"] },
+    { name: "Computer Science", code: "CS-101", department: "Technology", applicableClasses: ["10", "Grade 11", "Grade 12"] },
+  ]);
+
+  console.log("Creating Institutional Grading Policy Rules...");
+  await GradingPolicy.create([
+    { minPercentage: 90, maxPercentage: 100, grade: "A+", gradePoint: 10, isPass: true, remarks: "Outstanding Performance" },
+    { minPercentage: 80, maxPercentage: 89.99, grade: "A", gradePoint: 9, isPass: true, remarks: "Excellent" },
+    { minPercentage: 70, maxPercentage: 79.99, grade: "B+", gradePoint: 8, isPass: true, remarks: "Very Good" },
+    { minPercentage: 60, maxPercentage: 69.99, grade: "B", gradePoint: 7, isPass: true, remarks: "Good" },
+    { minPercentage: 50, maxPercentage: 59.99, grade: "C", gradePoint: 6, isPass: true, remarks: "Above Average" },
+    { minPercentage: 40, maxPercentage: 49.99, grade: "D", gradePoint: 5, isPass: true, remarks: "Average" },
+    { minPercentage: 33, maxPercentage: 39.99, grade: "E", gradePoint: 4, isPass: true, remarks: "Marginal Pass" },
+    { minPercentage: 0, maxPercentage: 32.99, grade: "F", gradePoint: 0, isPass: false, remarks: "Fail / Needs Remedial" },
+  ]);
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -411,6 +460,21 @@ const seed = async () => {
     },
   ]);
 
+  // 3b. DEMO GUARDIAN
+  console.log("Creating Institutional Guardian accounts...");
+  const guardian = await User.create({
+    name: "Ramesh Sharma (Guardian)",
+    email: "guardian@schoolsync.edu",
+    password: "guardian123",
+    role: "guardian",
+    relationship: "Father",
+    contactNumber: "9875706601",
+    linkedStudents: [students[0]._id], // Linked to Ankit (Class 10-A, Roll #4)
+    dutyStation: "Institutional Guardian Portal",
+    accessProtocol: "GUARDIAN_SECURE_V1",
+    status: "Active",
+  });
+
   // 4. STAFF ATTENDANCE
   console.log("Creating Staff Attendance records...");
   const staffAttendanceDocs = [];
@@ -534,7 +598,26 @@ const seed = async () => {
       });
     });
   });
-  await Fee.insertMany(feeDocs);
+  const insertedFees = await Fee.insertMany(feeDocs);
+
+  console.log("Creating Payment Transaction Ledger records...");
+  const paymentDocs = [];
+  insertedFees.forEach((feeDoc, idx) => {
+    if (feeDoc.paidAmount > 0) {
+      paymentDocs.push({
+        receiptNumber: `RCP-SEED-${String(idx + 1).padStart(5, "0")}`,
+        transactionId: `TXN-${Date.now()}-${idx + 1}`,
+        fee: feeDoc._id,
+        student: feeDoc.student,
+        amount: feeDoc.paidAmount,
+        paymentMethod: idx % 3 === 0 ? "UPI" : idx % 3 === 1 ? "Card" : "Bank Transfer",
+        receivedBy: admin._id,
+        remarks: `Initial settlement for ${feeDoc.month} ${feeDoc.year}`,
+        paidAt: new Date(),
+      });
+    }
+  });
+  await Payment.insertMany(paymentDocs);
 
   // 7. ACADEMIC MATERIALS / DOCUMENTS
   console.log("Creating Academic Materials & Documents...");
@@ -940,6 +1023,8 @@ const seed = async () => {
   console.log(`✅ Admin: 1 record`);
   console.log(`✅ Teachers/Staff: ${teachers.length} records`);
   console.log(`✅ Students: ${students.length} records`);
+  console.log(`✅ Guardians: 1 record`);
+  console.log(`✅ Payments (Ledger): ${paymentDocs.length} records`);
   console.log(`✅ Staff Attendance: ${staffAttendanceDocs.length} records`);
   console.log(`✅ Student Attendance: ${studentAttendanceDocs.length} records`);
   console.log(`✅ Fees: ${feeDocs.length} records`);
@@ -951,9 +1036,10 @@ const seed = async () => {
   console.log(`✅ Events/Holidays: 3 records`);
   console.log("---------------------------------------------------");
   console.log("🔑 Demo Logins:");
-  console.log("Admin   -> admin@school.com / admin123");
-  console.log("Teacher -> charu.s@schoolsync.edu / teacher123");
-  console.log("Student -> Roll: 4 (email: student@schoolsync.edu) / student123");
+  console.log("Admin    -> admin@school.com / admin123");
+  console.log("Teacher  -> charu.s@schoolsync.edu / teacher123");
+  console.log("Student  -> Roll: 4 (email: student@schoolsync.edu) / student123");
+  console.log("Guardian -> guardian@schoolsync.edu / guardian123");
   console.log("===================================================");
 
   process.exit(0);

@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const Attendance = require("../models/Attendance");
+const { logAction } = require("../utils/auditLogger");
 
 // @desc Load roll list for a class/section on a given date (with current status if marked)
 // @route GET /api/attendance/roll?class=&section=&date=&period=
@@ -68,6 +69,15 @@ const saveAttendance = async (req, res) => {
     }));
 
     await Attendance.bulkWrite(ops);
+
+    await logAction({
+      action: "ATTENDANCE_RECORDED",
+      performedBy: req.user._id,
+      targetEntity: "Attendance",
+      details: { class: cls, section, date, period, entriesCount: ops.length },
+      req,
+    });
+
     res.json({ message: "Attendance saved successfully!" });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -146,6 +156,18 @@ const getStudentAttendanceReport = async (req, res) => {
       return res
         .status(403)
         .json({ message: "Access denied. You can only view your own attendance record." });
+    }
+
+    // If guardian, ensure target student is linked to guardian account
+    if (req.user?.role === "guardian") {
+      const isLinked = (req.user.linkedStudents || []).some(
+        (id) => id.toString() === req.params.id
+      );
+      if (!isLinked) {
+        return res.status(403).json({
+          message: "Access denied. Student is not linked to your guardian account.",
+        });
+      }
     }
 
     const records = await Attendance.find({ student: req.params.id });

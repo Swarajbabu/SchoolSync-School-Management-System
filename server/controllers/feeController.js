@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const Fee = require("../models/Fee");
+const Payment = require("../models/Payment");
+const { logAction } = require("../utils/auditLogger");
 
 // @desc Get fee ledger for a class/section/month/year (Read-only, does not pollute DB on GET)
 // @route GET /api/fees?class=&section=&month=&year=
@@ -94,18 +96,44 @@ const getMyFees = async (req, res) => {
   }
 };
 
-// @desc Update or create a fee record (Atomic payment update with server-side status calculation)
+// @desc Update or create a fee record with strict financial validation and discrete payment transaction logging
 // @route PUT /api/fees/:id
 const updateFeeRecord = async (req, res) => {
   try {
-    const { studentId, month, year, totalAmount, paidAmount } = req.body;
+    const { studentId, month, year, totalAmount, paidAmount, paymentMethod, remarks } = req.body;
 
-    const numTotal = Math.max(0, Number(totalAmount) || 0);
-    const numPaid = Math.max(0, Math.min(numTotal, Number(paidAmount) || 0));
+    let existingDoc = null;
+    if (req.params.id && req.params.id !== "null" && req.params.id !== "undefined") {
+      try {
+        existingDoc = await Fee.findById(req.params.id);
+      } catch (err) {}
+    }
+
+    const effectiveTotal = totalAmount !== undefined ? totalAmount : existingDoc ? existingDoc.totalAmount : undefined;
+    const numTotal = Number(effectiveTotal);
+    const numPaid = Number(paidAmount);
+
+    if (isNaN(numTotal) || numTotal < 0) {
+      return res.status(400).json({ message: "Total invoice amount cannot be negative or invalid" });
+    }
+
+    if (isNaN(numPaid) || numPaid < 0) {
+      return res.status(400).json({ message: "Paid amount cannot be negative" });
+    }
+
+    // Strict Overpayment Guard
+    if (numPaid > numTotal) {
+      return res.status(400).json({
+        message: `Payment amount (${numPaid}) exceeds total invoice dues (${numTotal}). Overpayment rejected.`,
+      });
+    }
+
     const settlementStatus =
       numPaid >= numTotal && numTotal > 0 ? "PAID" : numPaid > 0 ? "PARTIAL" : "PENDING";
 
     let record;
+    let studentRef = studentId;
+
     if (req.params.id && req.params.id !== "null" && req.params.id !== "undefined") {
       record = await Fee.findByIdAndUpdate(
         req.params.id,
@@ -116,6 +144,7 @@ const updateFeeRecord = async (req, res) => {
         },
         { new: true, runValidators: true }
       );
+      if (record) studentRef = record.student;
     } else if (studentId && month && year) {
       const student = await User.findById(studentId);
       record = await Fee.findOneAndUpdate(
@@ -135,26 +164,95 @@ const updateFeeRecord = async (req, res) => {
     }
 
     if (!record) return res.status(404).json({ message: "Fee record not found" });
+
+    // Discrete Payment Transaction Logging
+    if (numPaid > 0) {
+      const timestamp = Date.now();
+      const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+      const receiptNumber = `REC-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, "0")}-${randomSuffix}`;
+      const transactionId = `TXN-${timestamp}-${randomSuffix}`;
+
+      await Payment.create({
+        fee: record._id,
+        student: studentRef,
+        amount: numPaid,
+        paymentMethod: paymentMethod || "Cash",
+        transactionId,
+        receiptNumber,
+        receivedBy: req.user._id,
+        remarks: remarks || "Tuition fee settlement",
+        paidAt: new Date(),
+      });
+
+      // Material Audit Trail
+      await logAction({
+        action: "FEE_PAYMENT_COLLECTED",
+        performedBy: req.user._id,
+        targetEntity: "Fee",
+        targetId: record._id,
+        details: { student: studentRef, amount: numPaid, receiptNumber, settlementStatus },
+        req,
+      });
+    }
+
     res.json(record);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// @desc Get complete fee history for one student (all months/years)
+// @desc Get complete fee history for one student
 // @route GET /api/fees/student/:id
 const getStudentFeeHistory = async (req, res) => {
   try {
-    if (req.user?.role === "student" && req.user._id.toString() !== req.params.id) {
+    const targetStudentId = req.params.id;
+
+    // Scoping for student
+    if (req.user?.role === "student" && req.user._id.toString() !== targetStudentId) {
       return res.status(403).json({ message: "Access denied. You can only view your own fee history." });
     }
-    const records = await Fee.find({ student: req.params.id }).sort({
-      createdAt: -1,
-    });
+
+    // Scoping for guardian
+    if (req.user?.role === "guardian") {
+      const isLinked = (req.user.linkedStudents || []).some(
+        (id) => id.toString() === targetStudentId
+      );
+      if (!isLinked) {
+        return res.status(403).json({ message: "Access denied. Student is not linked to your guardian account." });
+      }
+    }
+
+    const records = await Fee.find({ student: targetStudentId }).sort({ createdAt: -1 });
     const totalPaid = records.reduce((sum, r) => sum + r.paidAmount, 0);
     const totalAmount = records.reduce((sum, r) => sum + r.totalAmount, 0);
     const totalDue = Math.max(0, totalAmount - totalPaid);
     res.json({ records, totalPaid, totalAmount, totalDue });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc Get discrete payment ledger / transaction history
+// @route GET /api/fees/payments/history
+const getPaymentHistory = async (req, res) => {
+  try {
+    const filter = {};
+
+    if (req.user?.role === "student") {
+      filter.student = req.user._id;
+    } else if (req.user?.role === "guardian") {
+      filter.student = { $in: req.user.linkedStudents || [] };
+    } else if (req.query.studentId) {
+      filter.student = req.query.studentId;
+    }
+
+    const payments = await Payment.find(filter)
+      .populate("student", "name rollNo class section")
+      .populate("receivedBy", "name")
+      .sort({ paidAt: -1 })
+      .limit(100);
+
+    res.json(payments);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -165,4 +263,5 @@ module.exports = {
   getMyFees,
   updateFeeRecord,
   getStudentFeeHistory,
+  getPaymentHistory,
 };

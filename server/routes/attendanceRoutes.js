@@ -6,13 +6,13 @@ const {
   getAttendanceSummary,
   getStudentAttendanceReport,
 } = require("../controllers/attendanceController");
-const { protect, authorize } = require("../middleware/auth");
+const { protect, authorize, verifyTeacherAssignment } = require("../middleware/auth");
 
 router.use(protect);
 
-router.get("/roll", authorize("admin", "teacher"), getRollList);
-router.post("/save", authorize("admin", "teacher"), saveAttendance);
-router.get("/summary", getAttendanceSummary);
+router.get("/roll", authorize("admin", "teacher"), verifyTeacherAssignment, getRollList);
+router.post("/save", authorize("admin", "teacher"), verifyTeacherAssignment, saveAttendance);
+router.get("/summary", verifyTeacherAssignment, getAttendanceSummary);
 router.get("/student/:id", getStudentAttendanceReport);
 
 module.exports = router;

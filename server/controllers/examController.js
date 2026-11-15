@@ -19,6 +19,9 @@ const getExams = async (req, res) => {
     const exams = await Exam.find(filter).sort({ createdAt: -1 });
     res.json(exams);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid exam identifier format" });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -30,6 +33,9 @@ const createExam = async (req, res) => {
     const exam = await Exam.create(req.body);
     res.status(201).json(exam);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid exam identifier format" });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -42,6 +48,9 @@ const deleteExam = async (req, res) => {
     if (!exam) return res.status(404).json({ message: "Exam not found" });
     res.json({ message: "Exam removed" });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid exam identifier format" });
+    }
     res.status(500).json({ message: error.message });
   }
 };

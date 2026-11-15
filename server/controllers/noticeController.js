@@ -28,6 +28,9 @@ const getNotices = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(notices);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid notice identifier format" });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -49,6 +52,9 @@ const createNotice = async (req, res) => {
     });
     res.status(201).json(notice);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid notice identifier format" });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -68,6 +74,9 @@ const deleteNotice = async (req, res) => {
     await notice.deleteOne();
     res.json({ message: "Notice removed" });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid notice identifier format" });
+    }
     res.status(500).json({ message: error.message });
   }
 };

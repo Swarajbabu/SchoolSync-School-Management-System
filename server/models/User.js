@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6 },
     role: {
       type: String,
-      enum: ["admin", "teacher", "student"],
+      enum: ["admin", "teacher", "student", "guardian"],
       default: "student",
     },
 
@@ -47,6 +47,10 @@ const userSchema = new mongoose.Schema(
     payrollId: { type: String, default: "" },
     contractStatus: { type: String, default: "PERMANENT" },
     monthlySalary: { type: Number, default: 0 },
+
+    // ----- GUARDIAN SPECIFIC -----
+    linkedStudents: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    relationship: { type: String, default: "Guardian" },
 
     // ----- ADMIN SPECIFIC -----
     adminId: { type: String, default: "SYSTEM_ADMIN" },

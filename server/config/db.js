@@ -1,8 +1,10 @@
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/schoolsync";
+    const uri = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/eduplus";
     const conn = await mongoose.connect(uri);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {

@@ -62,13 +62,14 @@ const register = async (req, res) => {
 // @route POST /api/auth/login
 const login = async (req, res) => {
   try {
-    const { identifier, password, loginType } = req.body;
+    const rawIdentifier = req.body.identifier || req.body.email;
+    const { password, loginType } = req.body;
 
-    if (!identifier || !password) {
+    if (!rawIdentifier || !password) {
       return res.status(400).json({ message: "Identifier and password are required" });
     }
 
-    const cleanIdentifier = identifier.toString().trim();
+    const cleanIdentifier = rawIdentifier.toString().trim();
     const isEmail = cleanIdentifier.includes("@");
 
     let query;
@@ -93,8 +94,11 @@ const login = async (req, res) => {
     if (loginType === "student" && user.role !== "student") {
       return res.status(403).json({ message: "Please use Staff/Admin login tab" });
     }
-    if (loginType === "staff" && user.role === "student") {
-      return res.status(403).json({ message: "Please use Student login tab" });
+    if (loginType === "staff" && (user.role === "student" || user.role === "guardian")) {
+      return res.status(403).json({ message: "Please use Student / Guardian login tab" });
+    }
+    if (loginType === "guardian" && user.role !== "guardian") {
+      return res.status(403).json({ message: "Invalid account type for guardian portal" });
     }
 
     const isMatch = await user.matchPassword(password);
@@ -111,6 +115,7 @@ const login = async (req, res) => {
       class: user.class,
       section: user.section,
       profileImage: user.profileImage,
+      linkedStudents: user.linkedStudents || [],
       token: generateToken(user._id),
     });
   } catch (error) {

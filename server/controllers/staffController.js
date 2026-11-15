@@ -7,6 +7,12 @@ const getStaff = async (req, res) => {
     const staff = await User.find({ role: "teacher" }).select("-password").sort({ createdAt: -1 });
     res.json(staff);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid staff identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -31,6 +37,12 @@ const addStaff = async (req, res) => {
     const { password: pw, ...rest } = staff.toObject();
     res.status(201).json(rest);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid staff identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -52,6 +64,12 @@ const updateStaff = async (req, res) => {
     if (!staff) return res.status(404).json({ message: "Staff member not found" });
     res.json(staff);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid staff identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -64,6 +82,12 @@ const deleteStaff = async (req, res) => {
     if (!staff) return res.status(404).json({ message: "Staff member not found" });
     res.json({ message: "Staff member removed" });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid staff identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };

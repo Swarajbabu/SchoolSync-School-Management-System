@@ -18,6 +18,8 @@ const timetableRoutes = require("./routes/timetableRoutes");
 const materialRoutes = require("./routes/materialRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const eventRoutes = require("./routes/eventRoutes");
+const gradingPolicyRoutes = require("./routes/gradingPolicyRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 
 const app = express();
 
@@ -78,6 +80,8 @@ app.use("/api/timetable", timetableRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/grading-rules", gradingPolicyRoutes);
+app.use("/api/audit-logs", auditRoutes);
 
 // 404 Handler
 app.use((req, res) => {
@@ -88,6 +92,26 @@ app.use((req, res) => {
 
 // Global Error Handler
 app.use((err, req, res, next) => {
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      message: `Invalid identifier format: ${err.value}`,
+      error: "CastError",
+    });
+  }
+  if (err.name === "ValidationError") {
+    const messages = Object.values(err.errors || {}).map((val) => val.message);
+    return res.status(400).json({
+      message: messages.join(", ") || "Validation failed",
+      error: "ValidationError",
+    });
+  }
+  if (err.code === 11000) {
+    return res.status(409).json({
+      message: "Duplicate resource field value entered",
+      error: "DuplicateKeyError",
+    });
+  }
+
   console.error(err.stack);
   res.status(err.status || 500).json({
     message: err.message || "Server error",
@@ -97,6 +121,10 @@ app.use((err, req, res, next) => {
 // Start Server
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 SchoolSync server running on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`🚀 SchoolSync server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

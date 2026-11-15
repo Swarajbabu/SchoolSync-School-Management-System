@@ -10,6 +10,12 @@ const getEvents = async (req, res) => {
     const events = await Event.find(filter).sort({ date: 1 });
     res.json(events);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid event identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -21,6 +27,12 @@ const createEvent = async (req, res) => {
     const event = await Event.create({ ...req.body, createdBy: req.user._id });
     res.status(201).json(event);
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid event identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -33,6 +45,12 @@ const deleteEvent = async (req, res) => {
     if (!event) return res.status(404).json({ message: "Event not found" });
     res.json({ message: "Event removed" });
   } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({ message: "Invalid event identifier format" });
+    }
+    if (error.name === "ValidationError") {
+      return res.status(400).json({ message: error.message });
+    }
     res.status(500).json({ message: error.message });
   }
 };
