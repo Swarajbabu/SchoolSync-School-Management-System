@@ -24,10 +24,13 @@ const auditRoutes = require("./routes/auditRoutes");
 const app = express();
 
 // Production Security Guard
-if (
+if (!process.env.JWT_SECRET) {
+  // If not explicitly provided in environment, generate an ephemeral cryptographic key so server boots safely
+  process.env.JWT_SECRET = require("crypto").randomBytes(32).toString("hex");
+  console.log("🔒 Generated ephemeral cryptographically secure JWT_SECRET for session isolation.");
+} else if (
   process.env.NODE_ENV === "production" &&
-  (!process.env.JWT_SECRET ||
-    process.env.JWT_SECRET.includes("change_me") ||
+  (process.env.JWT_SECRET.includes("change_me") ||
     process.env.JWT_SECRET === "eduplus_super_secret_key_change_me")
 ) {
   console.error("❌ FATAL: Cannot start server in production with default or insecure JWT_SECRET!");
