@@ -57,8 +57,8 @@ app.use(
 app.use(express.json({ limit: "6mb" }));
 app.use(express.urlencoded({ extended: true, limit: "6mb" }));
 
-// Root Route
-app.get("/", (req, res) => {
+// Root API Info Route
+app.get("/api", (req, res) => {
   res.json({
     message: "Welcome to SchoolSync API 🚀",
     status: "Running",
@@ -103,6 +103,16 @@ if (fs.existsSync(clientDistPath)) {
     // If request starts with /api, pass to API 404 handler
     if (req.path.startsWith("/api")) return next();
     res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+} else {
+  // If client/dist is not present (standalone backend mode), fallback root to API info
+  app.get("/", (req, res) => {
+    res.json({
+      message: "Welcome to SchoolSync API 🚀",
+      status: "Running",
+      health: "/api/health",
+      documentation: "SchoolSync ERP Backend",
+    });
   });
 }
 
