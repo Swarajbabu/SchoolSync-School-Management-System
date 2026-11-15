@@ -40,7 +40,13 @@ connectDB();
 // Middleware
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL
+      ? process.env.CLIENT_URL === "*"
+        ? true
+        : process.env.CLIENT_URL.includes(",")
+        ? process.env.CLIENT_URL.split(",").map((s) => s.trim())
+        : process.env.CLIENT_URL
+      : true,
     credentials: true,
   })
 );

@@ -29,7 +29,7 @@ const ROLES = [
     accent: "#2563eb",
     accentBg: "#eff6ff",
     border: "#bfdbfe",
-    demo: { id: "4", pass: "student123", name: "Ankit (Roll 4)" },
+    demo: { id: "4", pass: "student123", name: "Ankit (Roll 4)", shortName: "Ankit" },
   },
   {
     id: "teacher",
@@ -41,7 +41,7 @@ const ROLES = [
     accent: "#0d9488",
     accentBg: "#f0fdfa",
     border: "#99f6e4",
-    demo: { id: "charu.s@schoolsync.edu", pass: "teacher123", name: "Charu Sarswat" },
+    demo: { id: "charu.s@schoolsync.edu", pass: "teacher123", name: "Charu Sarswat", shortName: "Charu" },
   },
   {
     id: "admin",
@@ -53,7 +53,7 @@ const ROLES = [
     accent: "#4f46e5",
     accentBg: "#eef2ff",
     border: "#c7d2fe",
-    demo: { id: "admin@school.com", pass: "admin123", name: "System Admin" },
+    demo: { id: "admin@school.com", pass: "admin123", name: "System Admin", shortName: "Admin" },
   },
 ];
 
@@ -344,8 +344,8 @@ const Login = () => {
                     title={`Click to auto-fill ${r.demo.name}`}
                   >
                     <span className="demo-pill-badge">{r.label}</span>
-                    <span className="demo-pill-name">{r.demo.name}</span>
-                    {isCurrent && <FiCheck className="demo-check" />}
+                    <span className="demo-pill-name">{r.demo.shortName || r.demo.name}</span>
+                    {isCurrent && <FiCheck className="demo-check" aria-hidden="true" />}
                   </button>
                 );
               })}
