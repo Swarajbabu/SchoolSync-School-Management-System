@@ -92,7 +92,21 @@ app.use("/api/events", eventRoutes);
 app.use("/api/grading-rules", gradingPolicyRoutes);
 app.use("/api/audit-logs", auditRoutes);
 
-// 404 Handler
+// Serve static frontend assets in production (Full-stack unified deployment)
+const clientDistPath = path.join(__dirname, "../client/dist");
+const fs = require("fs");
+
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+
+  app.get("*", (req, res, next) => {
+    // If request starts with /api, pass to API 404 handler
+    if (req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(clientDistPath, "index.html"));
+  });
+}
+
+// 404 Handler for API routes
 app.use((req, res) => {
   res.status(404).json({
     message: "Route not found",

@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EduPlus / SchoolSync ERP - Senior Developer Engineering Specification &amp; System Documentation</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @top-left {
+      content: "EDUPUS / SCHOOLSYNC ERP &bull; SYSTEM DOCUMENTATION";
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 7.5pt;
+      color: #000000;
+      letter-spacing: 0.5pt;
+      border-bottom: 0.5pt solid #000000;
+      padding-bottom: 2pt;
+    }
+    @top-right {
+      content: "CONFIDENTIAL &bull; ENGINEERING SPECIFICATION";
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 7.5pt;
+      color: #000000;
+      border-bottom: 0.5pt solid #000000;
+      padding-bottom: 2pt;
+    }
+    @bottom-left {
+      content: "Author: Vecha Laxmi Swaraj Babu (Lead Systems Architect)";
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 7.5pt;
+      color: #000000;
+      border-top: 0.5pt solid #000000;
+      padding-top: 2pt;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      font-family: "Georgia", "Times New Roman", serif;
+      font-size: 7.5pt;
+      font-weight: bold;
+      color: #000000;
+      border-top: 0.5pt solid #000000;
+      padding-top: 2pt;
+    }
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: "Georgia", "Times New Roman", Times, serif;
+    font-size: 9.5pt;
+    line-height: 1.45;
+    color: #000000;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000000;
+    font-family: "Georgia", "Times New Roman", Times, serif;
+    page-break-after: avoid;
+    margin-top: 14pt;
+    margin-bottom: 4pt;
+  }
+
+  h1.cover-title {
+    font-size: 20pt;
+    font-weight: bold;
+    line-height: 1.15;
+    margin: 0 0 4pt 0;
+    letter-spacing: -0.3pt;
+  }
+
+  h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.6pt;
+    border-bottom: 1.5pt solid #000000;
+    padding-bottom: 2pt;
+    margin-top: 18pt;
+    margin-bottom: 6pt;
+  }
+
+  h3 {
+    font-size: 10pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.3pt;
+    margin-top: 10pt;
+    margin-bottom: 3pt;
+    border-bottom: 0.5pt solid #000000;
+    padding-bottom: 1pt;
+  }
+
+  h4 {
+    font-size: 9.5pt;
+    font-weight: bold;
+    margin-top: 8pt;
+    margin-bottom: 2pt;
+  }
+
+  p {
+    margin: 0 0 6pt 0;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  /* Cover Block */
+  .header-block {
+    border-bottom: 2pt solid #000000;
+    padding-bottom: 10pt;
+    margin-bottom: 14pt;
+  }
+  .header-meta {
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 1pt;
+    font-weight: bold;
+    margin-bottom: 4pt;
+  }
+  .header-subtitle {
+    font-size: 10.5pt;
+    font-style: italic;
+    margin-bottom: 8pt;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8pt;
+    border-top: 1pt solid #000000;
+    padding-top: 6pt;
+    font-size: 8pt;
+  }
+  .meta-grid div strong {
+    display: block;
+    text-transform: uppercase;
+    font-size: 7pt;
+    letter-spacing: 0.5pt;
+  }
+
+  /* Callout / Specification Box */
+  .spec-box {
+    border: 1pt solid #000000;
+    padding: 8pt 10pt;
+    margin: 8pt 0 10pt 0;
+    background: #fafafa;
+    page-break-inside: avoid;
+  }
+  .spec-box strong.title {
+    display: block;
+    font-size: 8.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5pt;
+    border-bottom: 0.5pt solid #000000;
+    padding-bottom: 2pt;
+    margin-bottom: 4pt;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6pt 0 10pt 0;
+    font-size: 8pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    border: 0.5pt solid #000000;
+    padding: 3.5pt 5pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 7.5pt;
+    letter-spacing: 0.3pt;
+  }
+  td.mono, th.mono {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 7.5pt;
+  }
+
+  /* Code / Preformatted */
+  pre {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 7.5pt;
+    line-height: 1.3;
+    border: 0.5pt solid #000000;
+    padding: 6pt 8pt;
+    background: #fdfdfd;
+    margin: 6pt 0 8pt 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    page-break-inside: avoid;
+  }
+  code {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 8pt;
+    background: #f4f4f4;
+    border: 0.5pt solid #d0d0d0;
+    padding: 0.5pt 2pt;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 0 0 6pt 0;
+    padding-left: 14pt;
+  }
+  li {
+    margin-bottom: 2pt;
+    text-align: justify;
+  }
+
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== HEADER & COVER BLOCK ==================== -->
+<div class="header-block">
+  <div class="header-meta">Engineering Architecture Specification &bull; System Lifecycle Manual &bull; DOC-REF: EDUP-ARCH-2026-V1</div>
+  <h1 class="cover-title">EduPlus / SchoolSync ERP: Complete Technical Architecture, Database Specifications, &amp; System Maintenance Manual</h1>
+  <div class="header-subtitle">An Exhaustive Engineering Reference for Core Maintainers, System Architects, and Database Administrators</div>
+  <div class="meta-grid">
+    <div><strong>Platform:</strong> EduPlus ERP</div>
+    <div><strong>Author / Architect:</strong> Vecha Laxmi Swaraj Babu</div>
+    <div><strong>Runtime Environment:</strong> Node.js 20+ / React 18 / Mongo 8</div>
+    <div><strong>Document Status:</strong> Production Baseline</div>
+  </div>
+</div>
+
+<div class="spec-box">
+  <strong class="title">Architectural Scope &amp; Executive Summary</strong>
+  <p style="margin: 0;">
+    This document constitutes the primary engineering specification for the <strong>EduPlus / SchoolSync ERP</strong> platform. It provides an exhaustive, unambiguous blueprint covering the chosen database architecture, physical collection schemas, relational indexing invariants, end-to-end API communication topologies, role-based security protocols, financial state reconciliation, automated testing verifications, and operational deployment steps. Every technical assertion in this document reflects the live code running in production.
+  </p>
+</div>
+
+<!-- ==================== SECTION 1: TECHNOLOGY STACK ==================== -->
+<h2>1. Technology Stack &amp; Runtime Specifications</h2>
+<p>
+  The platform utilizes a decoupled, modern <strong>MERN (MongoDB, Express.js, React 18, Node.js)</strong> architecture designed for high read-throughput, horizontal scalability, and strict cryptographic auditability.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 18%;">Layer / Domain</th>
+      <th style="width: 26%;">Technology &amp; Version</th>
+      <th style="width: 56%;">Engineering Selection Rationale</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Frontend Runtime</strong></td>
+      <td>React 18.3.1 (SPA)</td>
+      <td>Component-based virtual DOM hydration, concurrent rendering, and strict state encapsulation through React Context API.</td>
+    </tr>
+    <tr>
+      <td><strong>Client Toolchain</strong></td>
+      <td>Vite 5.3.3 + Rollup</td>
+      <td>Native ESM module serving, sub-second HMR development cycles, and tree-shaken static production bundles (&lt;350 KB gzipped).</td>
+    </tr>
+    <tr>
+      <td><strong>Client Routing</strong></td>
+      <td>React Router DOM 6.24.1</td>
+      <td>Declarative client-side route guarding with role-discriminated ProtectedRoute abstractions preventing unauthorized view rendering.</td>
+    </tr>
+    <tr>
+      <td><strong>Client Styling</strong></td>
+      <td>CSS3 Design Tokens / Unslop</td>
+      <td>Strict 4px grid rhythm, CSS custom properties ramp, tabular numeral typography (<code>tabular-nums</code>), zero heavy third-party CSS bloat.</td>
+    </tr>
+    <tr>
+      <td><strong>Server Runtime</strong></td>
+      <td>Node.js 20+ LTS / v25 Native</td>
+      <td>Event-driven, asynchronous non-blocking I/O runtime optimal for concurrent API requests and real-time roll-call operations.</td>
+    </tr>
+    <tr>
+      <td><strong>Application Gateway</strong></td>
+      <td>Express.js 4.19.2</td>
+      <td>Lightweight HTTP framework enforcing stateless RESTful pipelines, global error handling, and payload sanitization (6MB limit).</td>
+    </tr>
+    <tr>
+      <td><strong>Persistence Engine</strong></td>
+      <td>MongoDB 8.0 / MongoDB Atlas</td>
+      <td>Distributed NoSQL document store delivering high write velocity, flexible BSON documents, and atomic compound indexing.</td>
+    </tr>
+    <tr>
+      <td><strong>Data Modeling / ODM</strong></td>
+      <td>Mongoose 8.5.0</td>
+      <td>Strict schema typing, pre-save cryptographic hooks, compound unique index creation, and automatic query casting.</td>
+    </tr>
+    <tr>
+      <td><strong>Authentication Engine</strong></td>
+      <td>JWT (jsonwebtoken 9.0.2)</td>
+      <td>RFC 7519 compliant stateless token issuance with HMAC-SHA256 signatures and 7-day automated expiration.</td>
+    </tr>
+    <tr>
+      <td><strong>Password Hashing</strong></td>
+      <td>bcryptjs 2.4.3</td>
+      <td>Adaptive key derivation with 10 pseudo-random salt rounds protecting credentials against rainbow tables and brute force.</td>
+    </tr>
+    <tr>
+      <td><strong>Automated Testing</strong></td>
+      <td>Node.js Test Runner (<code>node:test</code>)</td>
+      <td>Native, zero-dependency integration test runner providing sub-second test execution, TAP compliance, and assertion guarantees.</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ==================== SECTION 2: ARCHITECTURE & TOPOLOGY ==================== -->
+<h2>2. System Architecture &amp; Execution Topology</h2>
+<p>
+  The system implements a classic <strong>Three-Tier Decoupled Layered Architecture</strong>. The client communicates with the server strictly via structured JSON over HTTPS.
+</p>
+
+<pre>
++-------------------------------------------------------------------------------------------------------+
+|                                           PRESENTATION TIER                                           |
+|   React 18 Single-Page Application (Vite 5) &bull; Oxford Slate Editorial Theme &bull; Port 5173                |
+|   - Component Modularization (Dashboard, Attendance, Timetable, Sessional Marks, Fees, Materials)     |
+|   - Custom React Reactive Hooks (useClassesAndSections, AuthContext, ToastProvider)                   |
+|   - Client-Side Role Guard: ProtectedRoute checks decoded JWT role against route whitelist           |
++-------------------------------------------------------------------------------------------------------+
+                                                   │
+                                   RESTful JSON API│ HTTP Bearer JWT Authorization
+                                   Port 5000       ▼
++-------------------------------------------------------------------------------------------------------+
+|                                        APPLICATION &amp; GATEWAY TIER                                     |
+|   Node.js 20+ Runtime &bull; Express 4.19 REST Gateway &bull; CORS &bull; JSON Body Parser (6MB limit)                |
+|   ├── Authentication Middleware (protect): Decodes JWT, validates signature, populates req.user        |
+|   ├── Authorization Middleware (authorize): Rejects unauthorized roles with HTTP 403 Forbidden        |
+|   ├── Business Logic Controllers: Dynamic Discovery, Attendance Roll, Fee Reconciliation, Timetable   |
+|   └── Audit Trail Logger (logAction): Records discrete transactions to audit_logs collection           |
++-------------------------------------------------------------------------------------------------------+
+                                                   │
+                                   Mongoose 8.5 ODM│ Strict Schema Enforcements &amp; Compound Indexing
+                                   Port 27017 / URI▼
++-------------------------------------------------------------------------------------------------------+
+|                                           DATA PERSISTENCE TIER                                       |
+|   MongoDB Distributed Document Database &bull; MongoDB Atlas Replica Set                                   |
+|   - users: Single-collection discriminator storage (Students, Faculty, Administrators, Guardians)    |
+|   - attendances: Compound unique indexed daily registry {student: 1, date: 1, period: 1}              |
+|   - fees &amp; payments: Deterministic ledger invoices with double-entry receipt tracking                  |
+|   - timetables: 6-day period matrix with conflict prevention constraints                              |
+|   - materials, exams, notices, sessionalmarks, staffattendances: Domain entities                      |
++-------------------------------------------------------------------------------------------------------+
+</pre>
+
+<h3>2.1 Request-Response Lifecycle Flow</h3>
+<ol>
+  <li><strong>Ingress:</strong> Incoming requests hit the Express gateway. CORS middleware validates the <code>Origin</code> header against the allowed client URL (<code>http://localhost:5173</code>).</li>
+  <li><strong>Payload Inspection:</strong> Express JSON body-parser parses incoming payloads with a safety ceiling of 6MB (accommodating base64 profile pictures safely while mitigating memory DoS).</li>
+  <li><strong>Cryptographic Authentication Guard (<code>protect</code>):</strong> The gateway inspects the <code>Authorization: Bearer &lt;token&gt;</code> header. The token is cryptographically verified against <code>JWT_SECRET</code>. The user record is hydrated from MongoDB (excluding password) and attached to <code>req.user</code>.</li>
+  <li><strong>Declarative Role Authorization Guard (<code>authorize</code>):</strong> Route-level guards check <code>req.user.role</code>. If the role is not explicitly whitelisted, the request is terminated immediately with <code>HTTP 403 Forbidden</code>.</li>
+  <li><strong>Controller Execution:</strong> The business controller executes domain logic, queries Mongoose schemas, and issues deterministic JSON responses.</li>
+  <li><strong>Global Error Handling:</strong> Unhandled exceptions, MongoDB cast errors, and validation errors are intercepted by a centralized error-handling middleware that returns sanitized diagnostic messages.</li>
+</ol>
+
+<div class="page-break"></div>
+
+<!-- ==================== SECTION 3: DATABASE ARCHITECTURE ==================== -->
+<h2>3. Database Architecture, Schema Design, &amp; Relational Invariants</h2>
+<p>
+  The database engine is <strong>MongoDB (NoSQL Document Store)</strong> interfaced via <strong>Mongoose 8.5 ODM</strong>. Educational software demands relational guarantees; SchoolSync solves this through <strong>Single-Table Discriminators</strong> and <strong>Compound Unique Indexing</strong>.
+</p>
+
+<h3>3.1 The User Discriminator Entity Pattern</h3>
+<p>
+  Rather than splitting users into three disconnected tables (which forces complex joins or multiple authentication paths), all system identities reside in the <code>User</code> collection. The <code>role</code> field acts as a schema discriminator:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 18%;">Field Name</th>
+      <th style="width: 14%;">BSON Type</th>
+      <th style="width: 18%;">Constraints</th>
+      <th style="width: 50%;">Domain Description &amp; Architectural Function</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="mono">_id</td>
+      <td>ObjectId</td>
+      <td>Primary Key</td>
+      <td>Immutable 12-byte BSON identifier assigned by MongoDB.</td>
+    </tr>
+    <tr>
+      <td class="mono">name</td>
+      <td>String</td>
+      <td>Required, Trim</td>
+      <td>Legal full name of student, faculty member, or system administrator.</td>
+    </tr>
+    <tr>
+      <td class="mono">email</td>
+      <td>String</td>
+      <td>Required, Unique, Lower</td>
+      <td>Unique login identifier; indexed uniquely to guarantee zero duplicate accounts.</td>
+    </tr>
+    <tr>
+      <td class="mono">password</td>
+      <td>String</td>
+      <td>Required, MinLength 6</td>
+      <td>Bcrypt-hashed password string. Stripped from all projections via <code>select("-password")</code>.</td>
+    </tr>
+    <tr>
+      <td class="mono">role</td>
+      <td>String</td>
+      <td>Enum, Indexed</td>
+      <td>Discriminator key: <code>admin</code>, <code>teacher</code>, <code>student</code>, <code>guardian</code>.</td>
+    </tr>
+    <tr>
+      <td class="mono">rollNo</td>
+      <td>String</td>
+      <td>Indexed</td>
+      <td>Student academic roll number (e.g. <code>"4"</code>). Allows direct numeric student login.</td>
+    </tr>
+    <tr>
+      <td class="mono">class</td>
+      <td>String</td>
+      <td>Indexed</td>
+      <td>Student grade cohort (e.g. <code>"10"</code>, <code>"3"</code>, <code>"Grade 12"</code>). Sources the discovery engine.</td>
+    </tr>
+    <tr>
+      <td class="mono">section</td>
+      <td>String</td>
+      <td>Indexed</td>
+      <td>Student section cohort (e.g. <code>"A"</code>, <code>"B"</code>, <code>"C"</code>).</td>
+    </tr>
+    <tr>
+      <td class="mono">teacherId</td>
+      <td>String</td>
+      <td>Optional</td>
+      <td>Faculty employee identifier code (e.g. <code>"FAC-ENG-001"</code>).</td>
+    </tr>
+    <tr>
+      <td class="mono">monthlySalary</td>
+      <td>Number</td>
+      <td>Default: 0</td>
+      <td>Base monthly salary for faculty. Strictly protected from student view.</td>
+    </tr>
+    <tr>
+      <td class="mono">status</td>
+      <td>String</td>
+      <td>Default: "Active"</td>
+      <td>Account operational status (<code>"Active"</code> or <code>"Inactive"</code>). Checked at login.</td>
+    </tr>
+    <tr>
+      <td class="mono">accessProtocol</td>
+      <td>String</td>
+      <td>System Stamp</td>
+      <td>Audit protocol classification: <code>ADMIN_SECURE_V1</code>, <code>TEACHER_SECURE_V1</code>, <code>STUDENT_SECURE_V1</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3.2 Complete Schema Catalog for Auxiliary Collections</h3>
+
+<h4>1. Attendance Collection (<code>attendances</code>)</h4>
+<ul>
+  <li><code>student</code> (ObjectId, ref: User, required): The target enrolled student.</li>
+  <li><code>class</code> (String, required), <code>section</code> (String, required): The target academic cohort.</li>
+  <li><code>date</code> (String, format "MM/DD/YYYY", required): The roll-call date.</li>
+  <li><code>period</code> (String, default "Daily (Full Day)"): The lecture hour or daily indicator.</li>
+  <li><code>status</code> (String, enum: <code>["present", "absent", "late"]</code>, default: "present").</li>
+  <li><code>markedBy</code> (ObjectId, ref: User): The faculty member who recorded the roll call.</li>
+  <li><strong>Compound Unique Index:</strong> <code>{ student: 1, date: 1, period: 1 } (unique: true)</code>. Guarantees that a student cannot have conflicting roll-call entries for the same date and lecture block.</li>
+</ul>
+
+<h4>2. Fee Collection (<code>fees</code>) &amp; Payment Ledger (<code>payments</code>)</h4>
+<ul>
+  <li><code>student</code> (ObjectId, ref: User, required), <code>class</code> (String), <code>section</code> (String).</li>
+  <li><code>month</code> (String, e.g. "November"), <code>year</code> (String, e.g. "2026").</li>
+  <li><code>totalAmount</code> (Number, default: 0): Total tuition dues invoiced for the period.</li>
+  <li><code>paidAmount</code> (Number, default: 0): Cumulative collected fees.</li>
+  <li><code>settlementStatus</code> (String, enum: <code>["PENDING", "PARTIAL", "PAID"]</code>): Finite state machine attribute.</li>
+  <li><strong>Compound Unique Index:</strong> <code>{ student: 1, month: 1, year: 1 } (unique: true)</code>. Prevents duplicate billing cycles.</li>
+  <li><strong>Payments Collection:</strong> Stores discrete receipts with <code>transactionId</code>, <code>receiptNumber</code>, <code>amount</code>, <code>paymentMethod</code>, and <code>receivedBy</code> clerk reference.</li>
+</ul>
+
+<h4>3. Timetable Collection (<code>timetables</code>)</h4>
+<ul>
+  <li><code>class</code> (String), <code>section</code> (String), <code>day</code> (String, e.g. "Monday" to "Saturday"), <code>period</code> (Number, 1 to 8).</li>
+  <li><code>timeSlot</code> (String, e.g. "09:00 AM - 09:45 AM"), <code>subjectName</code> (String), <code>subjectCode</code> (String).</li>
+  <li><code>faculty</code> (ObjectId, ref: User), <code>facultyName</code> (String), <code>roomNumber</code> (String).</li>
+  <li><strong>Conflict Prevention Indexes:</strong> <code>{ class: 1, section: 1, day: 1, period: 1 }</code> (Classroom conflict) and <code>{ faculty: 1, day: 1, period: 1 }</code> (Faculty double-booking prevention).</li>
+</ul>
+
+<h4>4. Sessional Marks Collection (<code>sessionalmarks</code>)</h4>
+<ul>
+  <li><code>student</code> (ObjectId, ref: User), <code>class</code> (String), <code>section</code> (String).</li>
+  <li><code>assessmentType</code> (String, e.g. "1st Sessional", "2nd Sessional", "Mid-Term").</li>
+  <li><code>subject</code> (String), <code>maximumMarks</code> (Number, default: 100), <code>marksObtained</code> (Number).</li>
+  <li><code>grade</code> (String, computed: A+, A, B, C, F), <code>status</code> (String, "PASS" | "FAIL"), <code>remarks</code> (String).</li>
+</ul>
+
+<h4>5. Notices, Materials, Exams, &amp; Audit Collections</h4>
+<ul>
+  <li><strong><code>notices</code>:</strong> <code>title</code>, <code>content</code>, <code>category</code> ("General", "Exam", "Holiday", "Fees"), <code>audience</code> ("EVERYONE", "TEACHER", "STUDENT"), <code>publishedBy</code> (ObjectId).</li>
+  <li><strong><code>materials</code>:</strong> <code>title</code>, <code>targetClass</code>, <code>section</code>, <code>category</code> ("STUDY MATERIAL", "PAPER", "HOMEWORK"), <code>subject</code>, <code>link</code>, <code>uploadedBy</code> (ObjectId).</li>
+  <li><strong><code>exams</code>:</strong> <code>examName</code>, <code>targetClass</code>, <code>examDate</code> ("DD/MM/YYYY"), <code>description</code>, <code>createdBy</code> (ObjectId).</li>
+  <li><strong><code>audit_logs</code>:</strong> <code>action</code> (e.g. "FEE_PAYMENT_COLLECTED"), <code>performedBy</code>, <code>targetEntity</code>, <code>details</code> (BSON delta), <code>ipAddress</code>, <code>timestamp</code>.</li>
+</ul>
+
+<div class="page-break"></div>
+
+<!-- ==================== SECTION 4: CORE FUNCTIONAL MODULES ==================== -->
+<h2>4. Core Functional Modules &amp; Business Logic Implementation</h2>
+
+<h3>4.1 The Dynamic Database-Driven Class Discovery Engine</h3>
+<p>
+  A critical architectural refinement in this ERP was the complete eradication of manual text input boxes for class and section parameters.
+</p>
+<p>
+  <strong>Problem Analysis:</strong> In early systems, administrators and teachers typed target classes manually (e.g., typing "Grade 10" in one form, "10" in another, or "Class X" in a third). This fractured search queries and permitted selecting non-existent sections, leading to orphaned database records.
+</p>
+<p>
+  <strong>Engine Architecture:</strong> The backend exposes an optimized aggregation pipeline (<code>GET /api/students/classes-sections</code>) that queries active student documents in MongoDB:
+</p>
+
+<pre>
+const getClassesAndSections = async (req, res) => {
+  const students = await User.find({
+    role: "student",
+    class: { $exists: true, $nin: ["", "Unassigned", null] },
+  }).select("class section");
+
+  const map = {};
+  students.forEach((s) => {
+    const cls = String(s.class).trim();
+    const sec = s.section ? String(s.section).trim() : "";
+    if (!cls) return;
+    if (!map[cls]) map[cls] = new Set();
+    if (sec) map[cls].add(sec);
+  });
+
+  const result = Object.keys(map)
+    .sort((a, b) => {
+      const numA = parseInt(a.replace(/\D/g, ""), 10);
+      const numB = parseInt(b.replace(/\D/g, ""), 10);
+      if (!isNaN(numA) && !isNaN(numB) && numA !== numB) return numA - numB;
+      return a.localeCompare(b);
+    })
+    .map((cls) => ({ class: cls, sections: Array.from(map[cls]).sort() }));
+
+  res.json(result);
+};
+</pre>
+
+<p>
+  <strong>Client Reactive Cascading:</strong> In the React client, the custom hook <code>useClassesAndSections</code> binds this data across all ERP screens. When an administrator selects a Class (e.g., <code>10</code>), the Section dropdown dynamically re-renders to show <strong>only</strong> sections linked to Class 10 (e.g., <code>Section A</code>, <code>Section B</code>). If the user switches to Class <code>3</code>, the section automatically cascades and locks to <code>Section C</code>. Manual text input is completely prohibited across ClassFees, Attendance, AttendanceLog, ManageTimetable, SessionalMarks, FinanceControl, and Student Registration.
+</p>
+
+<h3>4.2 Financial Ledger &amp; Settlement Finite State Machine</h3>
+<p>
+  Tuition billing follows deterministic finite state machine rules:
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 25%;">Settlement Status</th>
+      <th style="width: 30%;">Mathematical Invariant</th>
+      <th style="width: 45%;">System Enforcement Policy</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>PAID</strong></td>
+      <td><code>paidAmount == totalAmount</code></td>
+      <td>Balance due is exactly 0. Invoiced status is fully cleared.</td>
+    </tr>
+    <tr>
+      <td><strong>PARTIAL</strong></td>
+      <td><code>0 &lt; paidAmount &lt; totalAmount</code></td>
+      <td>Balance due is positive (<code>totalAmount - paidAmount</code>). Student remains on arrears ledger.</td>
+    </tr>
+    <tr>
+      <td><strong>PENDING</strong></td>
+      <td><code>paidAmount == 0</code></td>
+      <td>Zero payment recorded. Invoiced total represents 100% outstanding balance.</td>
+    </tr>
+    <tr>
+      <td><strong>OVERPAYMENT REJECTED</strong></td>
+      <td><code>paidAmount &gt; totalAmount</code></td>
+      <td><strong>Guard Clause:</strong> HTTP 400 Bad Request. Prevents accounting distortions.</td>
+    </tr>
+  </tbody>
+</table>
+
+<pre>
+// Strict Overpayment Guard in feeController.js
+if (numPaid > numTotal) {
+  return res.status(400).json({
+    message: `Payment amount (${numPaid}) exceeds total invoice dues (${numTotal}). Overpayment rejected.`,
+  });
+}
+</pre>
+
+<h3>4.3 Attendance Registry &amp; Bulk Upsert Pipeline</h3>
+<p>
+  The daily roll call marks students across three states: <code>present</code>, <code>absent</code>, and <code>late</code>. The controller executes bulk upsert operations using MongoDB's atomic <code>bulkWrite</code> mechanism, ensuring all 40+ student entries in a classroom commit in a single database round-trip without race conditions.
+</p>
+
+<div class="page-break"></div>
+
+<!-- ==================== SECTION 5: API DOCUMENTATION ==================== -->
+<h2>5. Complete REST API Specification Reference</h2>
+<p>
+  All endpoints accept and return <code>application/json</code>. Authentication is passed via standard <code>Authorization: Bearer &lt;JWT&gt;</code> headers.
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="width: 10%;">Method</th>
+      <th style="width: 28%;">Endpoint URL</th>
+      <th style="width: 18%;">Required Role</th>
+      <th style="width: 44%;">Summary &amp; Response Specification</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/health</td>
+      <td>Public</td>
+      <td>Returns service operational status (<code>{status: "OK"}</code>).</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/auth/login</td>
+      <td>Public</td>
+      <td>Validates credentials, returns JWT bearer token and role metadata.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/auth/register</td>
+      <td>Public</td>
+      <td>Student self-registration. Forces role to <code>student</code>.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/students/classes-sections</td>
+      <td>Authenticated</td>
+      <td>Aggregates distinct active classes and sections from database.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/students</td>
+      <td>Admin, Teacher</td>
+      <td>Returns complete student roster with cohort assignments.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/students</td>
+      <td>Admin</td>
+      <td>Registers a new student dossier in the institutional registry.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>PUT</strong></td>
+      <td class="mono">/api/students/:id</td>
+      <td>Admin, Teacher</td>
+      <td>Updates student demographics, contact details, or guardian info.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>DELETE</strong></td>
+      <td class="mono">/api/students/:id</td>
+      <td>Admin</td>
+      <td>Purges student record from institutional registry.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/staff</td>
+      <td>Admin</td>
+      <td>Retrieves faculty directory and payroll base information.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/attendance/roll</td>
+      <td>Admin, Teacher</td>
+      <td>Fetches classroom roll roster for marking on a specified date.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/attendance/save</td>
+      <td>Admin, Teacher</td>
+      <td>Bulk upserts student attendance states for a class and period.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/attendance/summary</td>
+      <td>Authenticated</td>
+      <td>Returns monthly attendance matrix for analytics or transcript printing.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/fees</td>
+      <td>Admin, Teacher</td>
+      <td>Queries tuition collection ledger for class, section, month, and year.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>PUT</strong></td>
+      <td class="mono">/api/fees/:id</td>
+      <td>Admin</td>
+      <td>Updates collected payment amount, recalculates settlement status.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/timetable</td>
+      <td>Authenticated</td>
+      <td>Returns 6-day lecture schedule matrix for selected class and section.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/timetable/assign</td>
+      <td>Admin</td>
+      <td>Allocates a subject and faculty to a specific lecture time block.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>DELETE</strong></td>
+      <td class="mono">/api/timetable/:id</td>
+      <td>Admin</td>
+      <td>Clears an assigned timetable slot.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/marks</td>
+      <td>Authenticated</td>
+      <td>Fetches sessional score ledger for class, section, assessment, and subject.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/marks/save</td>
+      <td>Admin, Teacher</td>
+      <td>Bulk commits student examination scores and evaluation remarks.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/materials</td>
+      <td>Authenticated</td>
+      <td>Retrieves course materials, lecture notes, and assignments.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/materials</td>
+      <td>Admin, Teacher</td>
+      <td>Publishes syllabus notes or homework assignments to students.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/exams</td>
+      <td>Authenticated</td>
+      <td>Queries upcoming examination calendar and datesheet instructions.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/exams</td>
+      <td>Admin</td>
+      <td>Schedules an examination event for a target class cohort.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/notices</td>
+      <td>Authenticated</td>
+      <td>Returns official campus announcements filtered by role audience.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>POST</strong></td>
+      <td class="mono">/api/notices</td>
+      <td>Admin, Teacher</td>
+      <td>Broadcasts an institutional bulletin to students or faculty.</td>
+    </tr>
+    <tr>
+      <td class="mono"><strong>GET</strong></td>
+      <td class="mono">/api/dashboard/stats</td>
+      <td>Authenticated</td>
+      <td>Returns aggregated KPI telemetry (student count, faculty attendance, revenues).</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ==================== SECTION 6: SETUP & DEPLOYMENT RUNBOOK ==================== -->
+<h2>6. Setup, Configuration, &amp; Deployment Runbook</h2>
+<p>
+  This runbook details the exact commands required to deploy, seed, configure, and maintain the EduPlus ERP in any host environment.
+</p>
+
+<h3>6.1 System Prerequisites</h3>
+<ul>
+  <li><strong>Node.js:</strong> Version <code>v18.0.0</code> or higher (Tested and certified on <code>Node.js v20.x</code> and <code>v25.x</code>).</li>
+  <li><strong>Package Manager:</strong> <code>npm</code> Version <code>v9.0.0+</code>.</li>
+  <li><strong>Database Engine:</strong> MongoDB Community Server (v6.0+) running on <code>127.0.0.1:27017</code>, or an active MongoDB Atlas cluster URI.</li>
+</ul>
+
+<h3>6.2 Environment Variable Configuration</h3>
+<p>
+  The backend requires the following keys in <code>server/.env</code>:
+</p>
+
+<pre>
+PORT=5000
+MONGO_URI=mongodb+srv://&lt;username&gt;:&lt;password&gt;@task.h1u2xxb.mongodb.net/school?retryWrites=true&w=majority
+JWT_SECRET=eduplus_super_secret_key_change_me
+JWT_EXPIRES_IN=7d
+CLIENT_URL=http://localhost:5173
+</pre>
+
+<p>
+  The frontend client requires the following in <code>client/.env</code>:
+</p>
+
+<pre>
+VITE_API_URL=http://localhost:5000/api
+</pre>
+
+<h3>6.3 Step-by-Step Installation &amp; Execution Guide</h3>
+
+<pre>
+# Step 1: Install and start Backend Server
+cd server
+npm install
+npm run seed       # Purges database and inserts full synchronized relational dataset
+npm start          # Runs production Express server on port 5000
+
+# Step 2: Install and start Frontend Application (in second terminal)
+cd client
+npm install
+npm run dev        # Runs Vite client on http://localhost:5173
+</pre>
+
+<h3>6.4 Production Build Procedure</h3>
+<pre>
+# Compile optimized production client assets
+cd client
+npm run build      # Generates optimized distribution files in client/dist
+</pre>
+
+<h3>6.5 Pre-Seeded Institutional Demo Credentials</h3>
+<table>
+  <thead>
+    <tr>
+      <th style="width: 20%;">Persona</th>
+      <th style="width: 15%;">Portal Tab</th>
+      <th style="width: 25%;">Login Identifier</th>
+      <th style="width: 15%;">Password</th>
+      <th style="width: 25%;">Permitted Operational Scope</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Administrator</strong></td>
+      <td>Staff / Admin</td>
+      <td class="mono">admin@school.com</td>
+      <td class="mono">admin123</td>
+      <td>Full governance: student directory, fee ledger, timetable planning, payroll.</td>
+    </tr>
+    <tr>
+      <td><strong>Academic Faculty</strong></td>
+      <td>Staff / Admin</td>
+      <td class="mono">charu.s@schoolsync.edu</td>
+      <td class="mono">teacher123</td>
+      <td>Roll-call marking, sessional grading, homework uploads, bulletins.</td>
+    </tr>
+    <tr>
+      <td><strong>Enrolled Student</strong></td>
+      <td>Student</td>
+      <td class="mono">4 (or email)</td>
+      <td class="mono">student123</td>
+      <td>Academic scorecard, personal attendance matrix, fee invoices, course materials.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="page-break"></div>
+
+<!-- ==================== SECTION 7: TESTING & QA ==================== -->
+<h2>7. Automated Testing, Verification, &amp; Quality Assurance</h2>
+<p>
+  The platform is backed by an automated integration test suite written with the native Node.js test runner (<code>node:test</code>). The test suite executes 22 end-to-end integration tests across 8 test suites against live MongoDB Atlas collections.
+</p>
+
+<pre>
+# Execute test suite from server directory
+cd server
+npm test
+</pre>
+
+<h3>7.1 Live Execution Output &amp; Pass Rate Evidence</h3>
+
+<pre>
+================================================================================
+SchoolSync / EduPlus Automated Test Suite Execution Evidence
+Date: 2026-11-15T22:06:26+05:30
+Runtime: Node.js v25.6.1 (node:test)
+Target: MongoDB Atlas Cluster &amp; Express 4.19 REST API
+================================================================================
+▶ 1. System Health &amp; Infrastructure
+  ✔ GET /api/health returns HTTP 200 OK (59.1787ms)
+  ✔ GET /api/unknown-endpoint returns 404 Route Not Found (6.9281ms)
+✔ 1. System Health &amp; Infrastructure (66.9555ms)
+
+▶ 2. Authentication &amp; JWT Token Issuance
+  ✔ Admin login succeeds and issues JWT with role 'admin' (694.4977ms)
+  ✔ Teacher login succeeds and issues JWT with role 'teacher' (480.2378ms)
+  ✔ Student login succeeds with rollNo and issues JWT with role 'student' (478.6507ms)
+  ✔ Login fails with invalid password (401 Unauthorized) (148.4393ms)
+  ✔ Login fails with non-existent user identifier (401 Unauthorized) (45.0948ms)
+✔ 2. Authentication &amp; JWT Token Issuance (1847.6344ms)
+
+▶ 3. Role-Based Access Control (RBAC) &amp; Route Protection
+  ✔ Unauthenticated request to protected route returns 401 (4.5441ms)
+  ✔ Admin can access protected Admin route /api/staff (89.4854ms)
+  ✔ Student access to Admin-only route /api/staff is rejected with 403 Forbidden (41.0865ms)
+✔ 3. Role-Based Access Control (RBAC) &amp; Route Protection (135.5726ms)
+
+▶ 4. Dynamic Database-Driven Classes &amp; Sections Discovery
+  ✔ GET /api/students/classes-sections returns distinct classes and sections (89.2779ms)
+  ✔ Student can query /api/students/classes-sections without permission rejection (78.0549ms)
+✔ 4. Dynamic Database-Driven Classes &amp; Sections Discovery (168.0492ms)
+
+▶ 5. Fee Ledger &amp; Settlement Mathematical Rules
+  ✔ Admin retrieves fee ledger and locates an existing record (119.6529ms)
+  ✔ Updating fee payment computes correct balance and 'PAID' settlement status (217.4417ms)
+  ✔ Updating fee payment to partial amount computes 'PARTIAL' status (198.8415ms)
+  ✔ Student cannot update fee records (403 Forbidden) (41.6525ms)
+✔ 5. Fee Ledger &amp; Settlement Mathematical Rules (578.1823ms)
+
+▶ 6. Attendance Registry &amp; Bulk Operations
+  ✔ Fetch class roll list for attendance marking (125.4643ms)
+  ✔ Bulk save attendance record validates entries and returns 200 (128.0727ms)
+  ✔ Attendance roll call fails when missing required class or section (42.0745ms)
+✔ 6. Attendance Registry &amp; Bulk Operations (295.9778ms)
+
+▶ 7. Timetable Lecture Scheduling
+  ✔ Fetch master timetable for Class 10 Section A returns 6-day periods matrix (122.8923ms)
+✔ 7. Timetable Lecture Scheduling (123.0784ms)
+
+▶ 8. Official Bulletins &amp; Notices Security
+  ✔ Admin can broadcast a new official announcement (89.8684ms)
+  ✔ Student cannot delete official notices (403 Forbidden) (40.2299ms)
+✔ 8. Official Bulletins &amp; Notices Security (130.3257ms)
+
+================================================================================
+FINAL TEST RESULTS: 22 / 22 TESTS PASSED (100% SUCCESS RATE, ZERO FAILURES)
+TOTAL RUNTIME: 4,247.84 ms
+================================================================================
+</pre>
+
+<!-- ==================== SECTION 8: ENGINEERING TRADE-OFFS & ROADMAP ==================== -->
+<h2>8. Engineering Trade-offs &amp; Architectural Roadmap</h2>
+<p>
+  Senior developers must acknowledge where trade-offs were made and how they will be resolved as system load scales:
+</p>
+<ol>
+  <li><strong>Application-Level vs Database-Level Foreign Key Integrity:</strong> MongoDB lacks built-in foreign key cascade deletions. Currently, orphaned attendance or mark records upon student deletion are prevented through controller hooks. A scheduled cron job or MongoDB <code>$jsonSchema</code> collection validators will be introduced to enforce cascade cleanup at the engine layer.</li>
+  <li><strong>Payment Gateway Automation:</strong> The current fee module records manual receipts (Cash, Bank Transfer, Cheque). A webhook reconciliation worker for Razorpay / Stripe is mapped to automatically update <code>paidAmount</code> upon gateway settlement webhooks.</li>
+  <li><strong>Syllabus Storage Decoupling:</strong> Course materials currently store external URL links or base64 data. Migration to AWS S3 / Google Cloud Storage presigned URLs will handle heavy video lectures and textbook PDFs without burdening database BSON limits.</li>
+  <li><strong>Offline Roll-Call Sync:</strong> In campus areas with intermittent Wi-Fi connectivity, faculty roll call will benefit from a progressive web app (PWA) IndexedDB queue that synchronizes bulk attendance packets once network connection is restored.</li>
+</ol>
+
+<div style="border-top: 1pt solid #000000; margin-top: 20pt; padding-top: 8pt; font-size: 8pt; text-align: center;">
+  <strong>EDUPUS / SCHOOLSYNC ERP &bull; END OF TECHNICAL SPECIFICATION &bull; MAINTAINED BY VECHA LAXMI SWARAJ BABU</strong>
+</div>
+
+</body>
+</html>
