@@ -120,13 +120,16 @@ const StudentProfile = () => {
               <label
                 className={`photo-upload-btn${uploadingPhoto ? " uploading" : ""}`}
                 title="Upload student photo"
+                aria-label="Upload student photo"
               >
-                <FiCamera />
+                <FiCamera aria-hidden="true" />
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={handlePhotoChange}
+                  style={{ display: "none" }}
+                  aria-label="Upload student photo file"
                 />
               </label>
             </div>
