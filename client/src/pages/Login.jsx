@@ -3,39 +3,91 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   FiMail,
   FiLock,
-  FiUser,
   FiShield,
   FiEye,
   FiEyeOff,
   FiArrowRight,
-  FiCheckCircle,
   FiAlertCircle,
   FiZap,
-  FiClock,
-  FiAward,
+  FiCheck,
+  FiBookOpen,
+  FiHelpCircle,
+  FiUserCheck,
+  FiUsers,
+  FiActivity,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
 
+const ROLES = [
+  {
+    id: "student",
+    label: "Student",
+    icon: FiBookOpen,
+    desc: "Enrolled Students",
+    badge: "Roll No or Email",
+    placeholder: "e.g. 4 or student@schoolsync.edu",
+    accent: "#2563eb",
+    accentBg: "#eff6ff",
+    border: "#bfdbfe",
+    demo: { id: "4", pass: "student123", name: "Ankit (Roll 4)" },
+  },
+  {
+    id: "teacher",
+    label: "Faculty",
+    icon: FiUserCheck,
+    desc: "Academic Staff",
+    badge: "Official Faculty Email",
+    placeholder: "e.g. charu.s@schoolsync.edu",
+    accent: "#0d9488",
+    accentBg: "#f0fdfa",
+    border: "#99f6e4",
+    demo: { id: "charu.s@schoolsync.edu", pass: "teacher123", name: "Charu Sarswat" },
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    icon: FiShield,
+    desc: "System Management",
+    badge: "Root Administrative Email",
+    placeholder: "e.g. admin@school.com",
+    accent: "#4f46e5",
+    accentBg: "#eef2ff",
+    border: "#c7d2fe",
+    demo: { id: "admin@school.com", pass: "admin123", name: "System Admin" },
+  },
+];
+
 const Login = () => {
-  const [loginType, setLoginType] = useState("student");
+  const [selectedRole, setSelectedRole] = useState("student");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState("");
+  const [justAutofilled, setJustAutofilled] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { login, error: contextError } = useAuth();
   const navigate = useNavigate();
 
+  const currentRoleConfig = ROLES.find((r) => r.id === selectedRole) || ROLES[0];
   const activeError = localError || contextError;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError("");
+    if (!identifier.trim() || !password) {
+      setLocalError("Please enter both your identifier and password.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      await login(identifier, password, loginType);
+      // Map to role expected by authController
+      const loginTypePayload =
+        selectedRole === "teacher" ? "teacher" : selectedRole === "admin" ? "admin" : selectedRole;
+      await login(identifier.trim(), password, loginTypePayload);
       navigate("/dashboard");
     } catch (err) {
       setLocalError(
@@ -46,295 +98,316 @@ const Login = () => {
     }
   };
 
-  const handleQuickDemo = (role, demoId, demoPass) => {
+  const handleQuickDemo = (roleObj) => {
     setLocalError("");
-    setLoginType(role === "student" ? "student" : "staff");
-    setIdentifier(demoId);
-    setPassword(demoPass);
+    setSelectedRole(roleObj.id);
+    setIdentifier(roleObj.demo.id);
+    setPassword(roleObj.demo.pass);
+    setJustAutofilled(true);
+    setTimeout(() => setJustAutofilled(false), 1200);
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-layout">
-        {/* ========================================================= */}
-        {/* LEFT COLUMN: INSTITUTIONAL ENTERPRISE HERO SHOWCASE        */}
-        {/* ========================================================= */}
-        <aside className="auth-hero" aria-label="SchoolSync Institutional Overview">
-          <div className="auth-hero-glow" aria-hidden="true" />
+    <div className="campus-auth-root">
+      {/* BACKGROUND TEXTURE & AMBIENT DEPTH */}
+      <div className="campus-auth-bg-layer" aria-hidden="true">
+        <div className="campus-ambient-glow glow-1" />
+        <div className="campus-ambient-glow glow-2" />
+        <div className="campus-grid-pattern" />
+      </div>
 
-          <div className="auth-hero-top">
-            {/* Crest & Institutional Status */}
-            <div className="auth-brand-badge">
-              <div className="badge-crest">SS</div>
-              <span className="badge-text">SchoolSync Academic ERP</span>
+      {/* TOP INSTITUTIONAL STATUS BAR */}
+      <header className="campus-top-nav">
+        <div className="campus-brand-container">
+          <div className="campus-crest-icon">
+            <span>SS</span>
+          </div>
+          <div className="campus-brand-text">
+            <span className="campus-brand-name">SchoolSync</span>
+            <span className="campus-brand-sub">Academic Information System</span>
+          </div>
+        </div>
+
+        <div className="campus-top-meta">
+          <div className="campus-telemetry-badge">
+            <FiActivity className="pulse-icon" />
+            <span>Academic Session 2025–2026</span>
+          </div>
+          <button
+            type="button"
+            className="campus-help-btn"
+            onClick={() => setShowHelp(true)}
+            aria-label="Portal help and support"
+          >
+            <FiHelpCircle aria-hidden="true" />
+            <span>Help &amp; Support</span>
+          </button>
+        </div>
+      </header>
+
+      {/* MAIN CENTERED HERO CARD */}
+      <main className="campus-auth-main">
+        <div className={`campus-auth-card ${justAutofilled ? "autofill-flash" : ""}`}>
+          {/* CARD TOP DECORATIVE STRIP */}
+          <div
+            className="card-accent-strip"
+            style={{ backgroundColor: currentRoleConfig.accent }}
+          />
+
+          {/* CARD HEADER */}
+          <div className="campus-card-header">
+            <div
+              className="role-avatar-halo"
+              style={{
+                backgroundColor: currentRoleConfig.accentBg,
+                borderColor: currentRoleConfig.border,
+                color: currentRoleConfig.accent,
+              }}
+            >
+              <currentRoleConfig.icon className="role-main-icon" />
             </div>
 
-            {/* Authority Headline */}
-            <h1 className="auth-hero-title">
-              Intelligent School Management, <span>Elevated.</span>
-            </h1>
-            <p className="auth-hero-subtitle">
-              A unified institutional operating system for real-time attendance auditing,
-              examination grading, automated fee ledgers, and academic governance.
+            <h1 className="campus-card-title">Portal Sign In</h1>
+            <p className="campus-card-desc">
+              Select your institutional role and enter your authorized credentials.
             </p>
+          </div>
 
-            {/* Core Capability Pillars */}
-            <div className="auth-feature-list">
-              <div className="auth-feature-item">
-                <div className="auth-feature-icon">
-                  <FiCheckCircle />
-                </div>
-                <div className="auth-feature-body">
-                  <h4>Role-Scoped Governance (RBAC)</h4>
-                  <p>
-                    Strict cryptographic session isolation across Students, Academic Faculty, and
-                    System Administrators.
-                  </p>
-                </div>
-              </div>
-
-              <div className="auth-feature-item">
-                <div className="auth-feature-icon">
-                  <FiClock />
-                </div>
-                <div className="auth-feature-body">
-                  <h4>Real-Time Academic Telemetry</h4>
-                  <p>
-                    Live period-by-period attendance logs, automated pass/fail analytics, and class
-                    timetables.
-                  </p>
-                </div>
-              </div>
-
-              <div className="auth-feature-item">
-                <div className="auth-feature-icon">
-                  <FiAward />
-                </div>
-                <div className="auth-feature-body">
-                  <h4>Auditable Compliance &amp; Finance</h4>
-                  <p>
-                    Zero-leakage fee collection, multi-term report card generation, and institutional
-                    bulletins.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Demo Pre-fill Chips */}
-            <div className="auth-demo-card">
-              <div className="auth-demo-header">
-                <span className="auth-demo-tag">
-                  <FiZap /> 1-Click Demo Evaluation
-                </span>
-                <span className="auth-demo-hint">Click to populate credentials</span>
-              </div>
-              <div className="auth-demo-chips">
+          {/* 4-ROLE SEGMENTED SELECTOR */}
+          <div className="campus-role-selector" role="tablist" aria-label="Institutional Role Selection">
+            {ROLES.map((role) => {
+              const Icon = role.icon;
+              const isSelected = selectedRole === role.id;
+              return (
                 <button
+                  key={role.id}
                   type="button"
-                  className="auth-demo-chip"
-                  onClick={() => handleQuickDemo("student", "4", "student123")}
-                  title="Auto-fill Enrolled Student (Roll #4)"
-                >
-                  <span className="chip-role">Student</span>
-                  <span>Roll: 4 (Ankit)</span>
-                </button>
-                <button
-                  type="button"
-                  className="auth-demo-chip"
-                  onClick={() =>
-                    handleQuickDemo("staff", "charu.s@schoolsync.edu", "teacher123")
+                  role="tab"
+                  aria-selected={isSelected}
+                  className={`campus-role-pill ${isSelected ? "selected" : ""}`}
+                  style={
+                    isSelected
+                      ? {
+                          borderColor: role.accent,
+                          color: role.accent,
+                          backgroundColor: "#ffffff",
+                        }
+                      : {}
                   }
-                  title="Auto-fill Academic Faculty"
+                  onClick={() => {
+                    setSelectedRole(role.id);
+                    setLocalError("");
+                  }}
                 >
-                  <span className="chip-role">Faculty</span>
-                  <span>Charu Sarswat</span>
+                  <Icon className="pill-icon" />
+                  <span className="pill-title">{role.label}</span>
                 </button>
+              );
+            })}
+          </div>
+
+          {/* DYNAMIC ROLE GUIDANCE BANNER */}
+          <div
+            className="role-context-banner"
+            style={{
+              backgroundColor: currentRoleConfig.accentBg,
+              borderColor: currentRoleConfig.border,
+              color: currentRoleConfig.accent,
+            }}
+          >
+            <span className="context-dot" style={{ backgroundColor: currentRoleConfig.accent }} />
+            <span className="context-text">
+              <strong>{currentRoleConfig.label} Access:</strong> Enter your {currentRoleConfig.badge.toLowerCase()}
+            </span>
+          </div>
+
+          {/* ACTIVE ERROR ALERT */}
+          {activeError && (
+            <div className="campus-error-alert" role="alert">
+              <FiAlertCircle className="error-icon" aria-hidden="true" />
+              <span>{activeError}</span>
+            </div>
+          )}
+
+          {/* FORM CONTAINER */}
+          <form onSubmit={handleSubmit} className="campus-form" noValidate>
+            {/* IDENTIFIER FIELD */}
+            <div className="campus-form-field">
+              <label htmlFor="campus-identifier" className="campus-label">
+                <span>{currentRoleConfig.badge}</span>
+                <span className="required-star">*</span>
+              </label>
+              <div className="campus-input-box">
+                <FiMail className="input-glyph" aria-hidden="true" />
+                <input
+                  id="campus-identifier"
+                  type="text"
+                  className="campus-input"
+                  placeholder={currentRoleConfig.placeholder}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                  autoComplete="username"
+                />
+              </div>
+            </div>
+
+            {/* PASSWORD FIELD */}
+            <div className="campus-form-field">
+              <div className="label-with-link">
+                <label htmlFor="campus-password" className="campus-label">
+                  <span>Security Password</span>
+                  <span className="required-star">*</span>
+                </label>
                 <button
                   type="button"
-                  className="auth-demo-chip"
-                  onClick={() => handleQuickDemo("staff", "admin@school.com", "admin123")}
-                  title="Auto-fill System Administrator"
+                  className="link-plain"
+                  onClick={() => setShowHelp(true)}
                 >
-                  <span className="chip-role">Admin</span>
-                  <span>System Admin</span>
+                  Forgot?
+                </button>
+              </div>
+              <div className="campus-input-box">
+                <FiLock className="input-glyph" aria-hidden="true" />
+                <input
+                  id="campus-password"
+                  type={showPassword ? "text" : "password"}
+                  className="campus-input"
+                  placeholder="Enter your security password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="input-eye-btn"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Institutional Trust Footer */}
-          <div className="auth-hero-footer">
-            <span>
-              <FiShield aria-hidden="true" /> 256-Bit TLS End-to-End Encryption
-            </span>
-            <span>FERPA &amp; ISO 27001 Security Standard</span>
-          </div>
-        </aside>
-
-        {/* ========================================================= */}
-        {/* RIGHT COLUMN: PROFESSIONAL FORM CONTAINER                 */}
-        {/* ========================================================= */}
-        <main className="auth-form-container">
-          <div className="auth-card">
-            {/* Mobile Header (Visible on screens < 1024px) */}
-            <div className="auth-mobile-header">
-              <div className="auth-mobile-crest">SS</div>
-              <div>
-                <div className="auth-mobile-title">SchoolSync ERP</div>
-                <div className="auth-mobile-sub">Academic Command Center</div>
-              </div>
+            {/* REMEMBER ME TOGGLE */}
+            <div className="campus-options-row">
+              <label className="checkbox-wrap">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+                <span>Keep this session active on this device</span>
+              </label>
             </div>
 
-            {/* Form Title & Context */}
-            <div className="auth-card-header">
-              <div className="auth-status-pill">
-                <span className="auth-status-dot" aria-hidden="true" />
-                <span>Enterprise Portal</span>
-              </div>
-              <h2 className="auth-card-title">
-                {loginType === "student" ? "Student Portal Sign In" : "Staff & Admin Gateway"}
-              </h2>
-              <p className="auth-card-desc">
-                {loginType === "student"
-                  ? "Enter your assigned institutional Roll Number or registered email address."
-                  : "Enter your official institutional faculty or administrative account credentials."}
+            {/* PRIMARY SUBMIT BUTTON */}
+            <button
+              type="submit"
+              className="campus-submit-btn"
+              style={{
+                backgroundColor: currentRoleConfig.accent,
+                boxShadow: `0 8px 20px -6px ${currentRoleConfig.accent}66`,
+              }}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <span className="campus-btn-spinner" aria-hidden="true" />
+                  <span>Authenticating Credentials...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In to {currentRoleConfig.label} Portal</span>
+                  <FiArrowRight aria-hidden="true" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* 1-CLICK DEMO EVALUATION BAR */}
+          <div className="campus-demo-dock">
+            <div className="demo-dock-label">
+              <FiZap className="dock-zap" />
+              <span>1-Click Test Credentials:</span>
+            </div>
+            <div className="demo-chip-row">
+              {ROLES.map((r) => {
+                const isCurrent = selectedRole === r.id;
+                return (
+                  <button
+                    key={r.id}
+                    type="button"
+                    className={`demo-pill ${isCurrent ? "active-demo" : ""}`}
+                    onClick={() => handleQuickDemo(r)}
+                    title={`Click to auto-fill ${r.demo.name}`}
+                  >
+                    <span className="demo-pill-badge">{r.label}</span>
+                    <span className="demo-pill-name">{r.demo.name}</span>
+                    {isCurrent && <FiCheck className="demo-check" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* CARD REGISTRATION LINK */}
+          <div className="campus-card-footer">
+            <span>Enrolling as a new student?</span>
+            <Link to="/signup" className="signup-link">
+              Create an Account
+            </Link>
+          </div>
+        </div>
+      </main>
+
+      {/* BOTTOM FOOTER */}
+      <footer className="campus-footer">
+        <div className="campus-footer-content">
+          <span>SchoolSync Academic ERP v2.4 • Official Institutional Access</span>
+          <span className="footer-sep">•</span>
+          <span>256-Bit SSL Secured</span>
+          <span className="footer-sep">•</span>
+          <span>FERPA &amp; ISO 27001 Certified Governance</span>
+        </div>
+      </footer>
+
+      {/* HELP MODAL DIALOG */}
+      {showHelp && (
+        <div className="campus-modal-overlay" onClick={() => setShowHelp(false)}>
+          <div className="campus-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div className="modal-crest">SS</div>
+              <h3>Institutional Access Support</h3>
+            </div>
+            <div className="modal-body">
+              <p>
+                <strong>Student Credentials:</strong> Students can log in using either their official
+                Roll Number (e.g. <code>4</code>) or registered school email (e.g.{" "}
+                <code>student@schoolsync.edu</code>).
+              </p>
+              <p>
+                <strong>Faculty &amp; Staff:</strong> Faculty must use their designated{" "}
+                <code>@schoolsync.edu</code> institutional email.
+              </p>
+              <p>
+                <strong>Credential Resets:</strong> For password resets or MFA support, please contact
+                the Academic Registry Office at <code>admin@school.com</code>.
               </p>
             </div>
-
-            {/* Portal Role Tabs */}
-            <div className="auth-role-tabs" role="tablist" aria-label="Portal Selection">
+            <div className="modal-footer">
               <button
                 type="button"
-                role="tab"
-                aria-selected={loginType === "student"}
-                className={`auth-role-tab ${loginType === "student" ? "active" : ""}`}
-                onClick={() => {
-                  setLoginType("student");
-                  setLocalError("");
-                }}
+                className="btn btn-primary"
+                onClick={() => setShowHelp(false)}
               >
-                <FiUser aria-hidden="true" />
-                <span>Student Portal</span>
+                Close Guidance
               </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={loginType === "staff"}
-                className={`auth-role-tab ${loginType === "staff" ? "active" : ""}`}
-                onClick={() => {
-                  setLoginType("staff");
-                  setLocalError("");
-                }}
-              >
-                <FiShield aria-hidden="true" />
-                <span>Faculty &amp; Admin</span>
-              </button>
-            </div>
-
-            {/* Active Error Banner */}
-            {activeError && (
-              <div className="auth-error-banner" role="alert">
-                <FiAlertCircle className="auth-error-icon" aria-hidden="true" />
-                <span>{activeError}</span>
-              </div>
-            )}
-
-            {/* Form Fields */}
-            <form onSubmit={handleSubmit} className="auth-form" noValidate>
-              <div className="auth-form-group">
-                <label className="auth-label" htmlFor="auth-identifier">
-                  {loginType === "student" ? "Roll Number or Email" : "Institutional Email Address"}
-                </label>
-                <div className="auth-input-wrapper">
-                  <FiMail className="auth-input-icon" aria-hidden="true" />
-                  <input
-                    id="auth-identifier"
-                    type="text"
-                    className="auth-input"
-                    placeholder={
-                      loginType === "student"
-                        ? "e.g. 4 or student@schoolsync.edu"
-                        : "e.g. charu.s@schoolsync.edu"
-                    }
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    required
-                    autoComplete="username"
-                  />
-                </div>
-              </div>
-
-              <div className="auth-form-group">
-                <label className="auth-label" htmlFor="auth-password">
-                  <span>Security Password</span>
-                  <a
-                    href="#forgot"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert("Please contact the Institutional Registrar or System Administrator to reset your security credentials.");
-                    }}
-                    className="auth-forgot-link"
-                  >
-                    Forgot Password?
-                  </a>
-                </label>
-                <div className="auth-input-wrapper">
-                  <FiLock className="auth-input-icon" aria-hidden="true" />
-                  <input
-                    id="auth-password"
-                    type={showPassword ? "text" : "password"}
-                    className="auth-input"
-                    placeholder="Enter account password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="auth-input-action"
-                    onClick={() => setShowPassword(!showPassword)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="auth-options">
-                <label className="auth-remember">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                  />
-                  <span>Keep this session active</span>
-                </label>
-              </div>
-
-              <button type="submit" className="auth-submit-btn" disabled={submitting}>
-                {submitting ? (
-                  <>
-                    <span className="auth-spinner" aria-hidden="true" />
-                    <span>Authenticating Credentials...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In to SchoolSync</span>
-                    <FiArrowRight aria-hidden="true" />
-                  </>
-                )}
-              </button>
-            </form>
-
-            {/* Footer Registration Link */}
-            <div className="auth-card-footer">
-              Don't have an enrolled student profile yet?
-              <Link to="/signup">Register Account</Link>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

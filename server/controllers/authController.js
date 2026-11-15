@@ -92,13 +92,16 @@ const login = async (req, res) => {
     }
 
     if (loginType === "student" && user.role !== "student") {
-      return res.status(403).json({ message: "Please use Staff/Admin login tab" });
+      return res.status(403).json({ message: "Please use Staff, Faculty, or Guardian portal login" });
     }
-    if (loginType === "staff" && (user.role === "student" || user.role === "guardian")) {
-      return res.status(403).json({ message: "Please use Student / Guardian login tab" });
+    if ((loginType === "staff" || loginType === "teacher") && (user.role === "student" || user.role === "guardian")) {
+      return res.status(403).json({ message: "Please use Student or Guardian portal login" });
+    }
+    if (loginType === "admin" && user.role !== "admin") {
+      return res.status(403).json({ message: "Access restricted: requires administrative credentials" });
     }
     if (loginType === "guardian" && user.role !== "guardian") {
-      return res.status(403).json({ message: "Invalid account type for guardian portal" });
+      return res.status(403).json({ message: "Invalid account type for Parent & Guardian portal" });
     }
 
     const isMatch = await user.matchPassword(password);

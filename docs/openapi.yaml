@@ -1,0 +1,454 @@
+openapi: 3.0.3
+info:
+  title: SchoolSync / EduPlus ERP API
+  description: >-
+    Production REST API documentation for the SchoolSync School Management & Enterprise Resource Planning System.
+    Includes JWT Bearer Authentication, Role-Based Access Control (Admin, Teacher, Student, Guardian),
+    Attendance Matrix, Sessional Marks, Fee Collections, Timetable Scheduling, and Dynamic Class/Section Discovery.
+  version: 1.0.0
+  contact:
+    name: SchoolSync Engineering
+    email: admin@school.com
+servers:
+  - url: http://localhost:5000/api
+    description: Local Development Server
+  - url: https://api.schoolsync.edu/api
+    description: Production Environment
+
+tags:
+  - name: Authentication
+    description: User authentication, registration, session validation, and password lifecycle
+  - name: Students
+    description: Student roster, dossiers, and dynamic class/section queries
+  - name: Staff
+    description: Faculty management, employee profiles, and department rosters
+  - name: Attendance
+    description: Daily roll-call entries, monthly matrices, and batch imports
+  - name: Fees
+    description: Fee invoices, payment reconciliation, settlement statuses, and receipts
+  - name: Marks
+    description: Sessional scorecards, exams, and transcript generation
+  - name: Timetable
+    description: Weekly 6-day lecture scheduling and period conflict prevention
+  - name: Materials
+    description: Course syllabi, study materials, and homework assignments
+  - name: Notices
+    description: Institutional bulletins segmented by audience
+  - name: Dashboard
+    description: Aggregated KPI telemetry and persona-specific overviews
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - identifier
+        - password
+      properties:
+        identifier:
+          type: string
+          example: admin@school.com
+          description: Email address or Student Roll Number
+        password:
+          type: string
+          format: password
+          example: admin123
+        loginType:
+          type: string
+          enum: [staff, student, admin, teacher, guardian]
+          default: staff
+          example: staff
+
+    AuthResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 6af71af7a015fa5c8d19f950
+        name:
+          type: string
+          example: System Admin
+        email:
+          type: string
+          example: admin@school.com
+        role:
+          type: string
+          enum: [admin, teacher, student, guardian]
+          example: admin
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    ClassSectionItem:
+      type: object
+      properties:
+        class:
+          type: string
+          example: "10"
+        sections:
+          type: array
+          items:
+            type: string
+          example: ["A", "B"]
+
+    FeeRecord:
+      type: object
+      properties:
+        _id:
+          type: string
+        student:
+          type: string
+        class:
+          type: string
+          example: "10"
+        section:
+          type: string
+          example: "A"
+        month:
+          type: string
+          example: "November"
+        year:
+          type: string
+          example: "2026"
+        totalAmount:
+          type: number
+          example: 5000
+        paidAmount:
+          type: number
+          example: 5000
+        settlementStatus:
+          type: string
+          enum: [PENDING, PARTIAL, PAID]
+          example: PAID
+
+    AttendanceEntry:
+      type: object
+      required:
+        - studentId
+        - status
+      properties:
+        studentId:
+          type: string
+        status:
+          type: string
+          enum: [present, absent, late]
+          example: present
+
+    SaveAttendancePayload:
+      type: object
+      required:
+        - class
+        - section
+        - date
+        - entries
+      properties:
+        class:
+          type: string
+          example: "10"
+        section:
+          type: string
+          example: "A"
+        date:
+          type: string
+          example: "11/15/2026"
+        period:
+          type: string
+          example: "Daily (Full Day)"
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceEntry'
+
+paths:
+  /health:
+    get:
+      summary: Service Health Check
+      tags: [Dashboard]
+      responses:
+        '200':
+          description: API is operational
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+                  message:
+                    type: string
+                    example: SchoolSync API is running
+
+  /auth/login:
+    post:
+      summary: Authenticate user & issue JWT
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+        '403':
+          description: Account disabled or portal mismatch
+
+  /auth/register:
+    post:
+      summary: Student Self-Registration
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: Aarav Sharma
+                email:
+                  type: string
+                  example: aarav@example.com
+                password:
+                  type: string
+                  minLength: 6
+                rollNo:
+                  type: string
+                  example: "15"
+                class:
+                  type: string
+                  example: "10"
+                section:
+                  type: string
+                  example: "A"
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Validation error or duplicate email
+
+  /students/classes-sections:
+    get:
+      summary: Get dynamic classes and sections from database
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      description: Aggregates all registered classes and their assigned sections dynamically.
+      responses:
+        '200':
+          description: Array of class-section mappings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClassSectionItem'
+
+  /students:
+    get:
+      summary: List all enrolled students
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of students
+    post:
+      summary: Create new student record
+      tags: [Students]
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Student created
+
+  /staff:
+    get:
+      summary: List all faculty and staff
+      tags: [Staff]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of staff members
+        '403':
+          description: Forbidden for non-administrators
+
+  /attendance/roll:
+    get:
+      summary: Fetch class attendance roster for marking
+      tags: [Attendance]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "10"
+        - name: section
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "A"
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "11/15/2026"
+        - name: period
+          in: query
+          schema:
+            type: string
+            example: "Daily (Full Day)"
+      responses:
+        '200':
+          description: Roster of students with marked/default status
+
+  /attendance/save:
+    post:
+      summary: Bulk save/update attendance entries
+      tags: [Attendance]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveAttendancePayload'
+      responses:
+        '200':
+          description: Attendance saved successfully
+
+  /fees:
+    get:
+      summary: Query class fee collection ledger
+      tags: [Fees]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class
+          in: query
+          schema:
+            type: string
+            example: "10"
+        - name: section
+          in: query
+          schema:
+            type: string
+            example: "A"
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "November"
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "2026"
+      responses:
+        '200':
+          description: Fee ledger with computed balance and totals
+
+  /fees/{id}:
+    put:
+      summary: Update payment and calculate settlement status
+      tags: [Fees]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                totalAmount:
+                  type: number
+                  example: 5000
+                paidAmount:
+                  type: number
+                  example: 5000
+                settlementStatus:
+                  type: string
+                  enum: [PENDING, PARTIAL, PAID]
+      responses:
+        '200':
+          description: Updated fee record
+        '400':
+          description: Overpayment or negative values rejected
+        '403':
+          description: Admin privileges required
+
+  /timetable:
+    get:
+      summary: Fetch weekly timetable grid
+      tags: [Timetable]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "10"
+        - name: section
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "A"
+      responses:
+        '200':
+          description: 6-day lecture schedule
+
+  /notices:
+    get:
+      summary: Fetch official announcements
+      tags: [Notices]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of bulletins
+    post:
+      summary: Broadcast new announcement
+      tags: [Notices]
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Notice published

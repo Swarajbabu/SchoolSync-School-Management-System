@@ -41,8 +41,11 @@
 - [9. Installation & Quick Start Guide](#9-installation--quick-start-guide)
 - [10. Demo Credentials](#10-demo-credentials)
 - [11. Visual Tour & Screenshots](#11-visual-tour--screenshots)
-- [12. Security & Compliance Engineering](#12-security--compliance-engineering)
-- [13. License & Authorship](#13-license--authorship)
+- [12. Automated Test Suite & Verification](#12-automated-test-suite--verification)
+- [13. Known Limitations & Production Roadmap](#13-known-limitations--production-roadmap)
+- [14. Architecture Artifacts & Documentation Index](#14-architecture-artifacts--documentation-index)
+- [15. Security & Compliance Engineering](#15-security--compliance-engineering)
+- [16. License & Authorship](#16-license--authorship)
 
 ---
 
@@ -562,7 +565,56 @@ Use these pre-seeded accounts to explore each persona:
 
 ---
 
-## 12. Security & Compliance Engineering
+## 12. Automated Test Suite & Verification
+
+SchoolSync includes a native, automated end-to-end integration test suite built with Node.js's native test runner (`node:test` and `node:assert`).
+
+### Running the Test Suite
+```bash
+cd server
+npm test
+```
+*Or directly:*
+```bash
+node --test tests/api.test.js
+```
+
+### Test Coverage Summary
+- **System Health & Infrastructure**: Health checks, graceful error handling, 404 route handling.
+- **Authentication & JWT Lifecycles**: Token issuance, password verification, invalid password rejections, non-existent identity guards.
+- **Role-Based Access Control (RBAC)**: Endpoint route guards ensuring Admin-only routes strictly reject Student tokens with `403 Forbidden`.
+- **Dynamic Database Class/Section Discovery**: Verifies that `/api/students/classes-sections` aggregates live student classes and sections accurately without static hardcoding.
+- **Fee Ledger & Settlement Mathematics**: Mathematical verification of `PAID`, `PARTIAL`, and `PENDING` states, zero-balance enforcement, and unauthorized student modification guards.
+- **Attendance Registry**: Roll-call roster extraction, bulk attendance saving, and missing-parameter boundary rejection.
+- **Timetable Scheduling**: Verification of 6-day weekly timetable grid queries.
+- **Official Bulletins & Notices**: Announcement authoring and role-based deletion barriers.
+
+*Live execution logs are archived at [docs/test-results.log](docs/test-results.log) (22/22 tests passing).*
+
+---
+
+## 13. Known Limitations & Production Roadmap
+
+While SchoolSync provides a comprehensive ERP workflow for K-12 and collegiate institutions, the following architectural boundaries are tracked for future releases:
+
+1. **Payment Gateway Integration**: Current fee ledger operations support cash, cheque, and bank receipt reconciliation. Direct integration with payment gateways (Stripe / Razorpay webhooks) is planned for automated ledger settlement.
+2. **Push Notifications & SMS Gateways**: Notices and attendance alerts currently trigger in-app updates; automated SMS/WhatsApp alerts for student absence require Twilio / MSG91 webhook configuration.
+3. **Blob Storage for Heavy Course Materials**: Course materials and homework links currently store direct URLs and metadata; integration with AWS S3 / Cloudinary for direct multi-gigabyte video lectures and PDFs is scheduled.
+4. **Offline Mobile Synchronization**: The web client is fully responsive across desktop, tablet, and mobile; native offline PWA service-worker synchronization for remote attendance marking is in development.
+
+---
+
+## 14. Architecture Artifacts & Documentation Index
+
+- 📄 **API Specification (OpenAPI 3.0)**: [docs/openapi.yaml](docs/openapi.yaml)
+- 📊 **Entity-Relationship & Schema Diagram**: [docs/schema-and-er-diagram.md](docs/schema-and-er-diagram.md)
+- 🧪 **Automated Test Execution Evidence**: [docs/test-results.log](docs/test-results.log)
+- 📑 **Technical Design Whitepaper (Monochrome PDF)**: [docs/technical-report.pdf](docs/technical-report.pdf)
+- 📝 **Technical Design Whitepaper (Markdown)**: [docs/technical-report.md](docs/technical-report.md)
+
+---
+
+## 15. Security & Compliance Engineering
 
 1. **Bcrypt Password Hashing**: Passwords are salted and encrypted with 10 rounds of `bcryptjs` hashing.
 2. **Stateless JWT Authorization**: Bearer tokens carry verified claims with automatic expiry rejection (`401 Unauthorized`).
@@ -573,7 +625,7 @@ Use these pre-seeded accounts to explore each persona:
 
 ---
 
-## 13. License & Authorship
+## 16. License & Authorship
 
 Distributed under the **MIT License**. See `LICENSE` for details.
 
